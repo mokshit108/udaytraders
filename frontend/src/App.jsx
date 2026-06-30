@@ -10,7 +10,7 @@ import {
   Services,
   SuperQuality,
 } from "./sections";
-import { NewArrivals, ContactUs, LoginCard, AddtoCart, Checkout, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, PaymentForm, NotFound, RegisterPhoneNumber } from "./pages";
+import { NewArrivals, ContactUs, LoginCard, AddtoCart, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
 import { CartProvider } from "./context/CartContext"; // Import CartProvider
 import SuccessPage from "./components/SuccessPage";
 const App = () => {
@@ -34,8 +34,6 @@ const App = () => {
             <Route path="/myorder/*" element={<OrderTimeline />} />
             <Route path="/product" element={<Product />} />
             <Route path="/cart" element={<AddtoCart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/payment" element={<PaymentForm/>} />
             <Route path="/success" element={<SuccessPage/>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,11 +1,4 @@
 const pool = require('../config/db');
-const Razorpay = require('razorpay');
-
-// Your Razorpay credentials
-const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
 
 const addDays = (date, days) => {
   const result = new Date(date);
@@ -90,19 +83,12 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // Create Razorpay order
-    const razorpayOrder = await razorpayInstance.orders.create({
-      amount: orderDetails.finalAmount * 100, // Amount in paise
-      currency: 'INR',
-      receipt: `order_${orderId}`,
-      payment_capture: 1, // Auto capture
-    });
-
     // Commit transaction
     await pool.query('COMMIT');
 
     return res.json({
-      order_id: razorpayOrder.id,
+      order_id: orderId,
+      message: 'Order created successfully'
     });
   } catch (error) {
     // Rollback transaction on error

@@ -18,10 +18,6 @@ const CartSlider = ({ cartSidebarOpen, toggleCartSidebar }) => {
     navigate("/cart");
   };
 
-  const handleCheckout = () => {
-    toggleCartSidebar();
-    navigate("/checkout");
-  };
 
   const handleRemoveFromCart = (productId) => {
     removeFromCart(productId);
@@ -92,12 +88,6 @@ const CartSlider = ({ cartSidebarOpen, toggleCartSidebar }) => {
                 className="bg-sky-950 text-white px-4 py-2 rounded-sm w-full hover:bg-sky-700 mb-2"
               >
                 View Cart
-              </button>
-              <button
-                onClick={handleCheckout}
-                className="bg-sky-950 w-full text-white px-4 py-2 rounded-sm hover:bg-sky-700"
-              >
-                Checkout
               </button>
             </div>
           </>

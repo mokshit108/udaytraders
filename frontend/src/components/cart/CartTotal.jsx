@@ -59,12 +59,6 @@ const CartTotal = ({
         <span>Total:</span>
         <span>₹{finalAmount.toFixed(2)}</span>
       </div>
-      <button
-        onClick={handleCheckout}
-        className="bg-sky-950 text-white font-normal px-4 py-2 rounded-sm w-full mt-4 hover:bg-sky-700"
-      >
-        Proceed to Checkout
-      </button>
     </div>
   );
 };

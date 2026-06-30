@@ -23,10 +23,7 @@ export const CartProvider = ({ children }) => {
     return storedDiscount ? parseInt(storedDiscount) : 0;
   });
 
-  const [checkoutFormDetails, setCheckoutFormDetails] = useState(() => {
-    const savedCheckoutDetails = sessionStorage.getItem("checkoutFormDetails");
-    return savedCheckoutDetails ? JSON.parse(savedCheckoutDetails) : {};
-  });
+
 
   const [orderDetails, setOrderDetails] = useState(() => {
     const savedOrderDetails = sessionStorage.getItem("orderDetails");
@@ -53,21 +50,19 @@ export const CartProvider = ({ children }) => {
 
     // Update session storage
     sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
-    sessionStorage.setItem("checkoutFormDetails", JSON.stringify(checkoutFormDetails));
     sessionStorage.setItem("orderDetails", JSON.stringify(orderDetails));
     if (cartItems.length === 0) {
       setAppliedCoupon("");
       setDiscountPercentage(0);
       sessionStorage.removeItem("appliedCoupon");
       sessionStorage.removeItem("discountPercentage");
-      sessionStorage.removeItem("checkoutFormDetails");
       sessionStorage.removeItem("orderDetails");
     }
     if (appliedCoupon) {
       sessionStorage.setItem("appliedCoupon", appliedCoupon);
       sessionStorage.setItem("discountPercentage", discountPercentage);
     }
-  }, [cartItems, appliedCoupon, discountPercentage, checkoutFormDetails, orderDetails]);
+  }, [cartItems, appliedCoupon, discountPercentage, orderDetails]);
 
   const addToCart = (product) => {
     setCartItems((prevItems) => {
@@ -102,9 +97,7 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  const saveCheckoutFormDetails = (details) => {
-    setCheckoutFormDetails(details);
-  };
+
 
   const saveOrderDetails = (details) => {
     setOrderDetails(details);
@@ -192,8 +185,6 @@ export const CartProvider = ({ children }) => {
         setAppliedCoupon,
         discountPercentage,
         setDiscountPercentage,
-        checkoutFormDetails,
-        saveCheckoutFormDetails,
         orderDetails,
         saveOrderDetails,
         finalAmount,       // Discounted total

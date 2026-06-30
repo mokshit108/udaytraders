@@ -5,8 +5,6 @@ const cors = require("cors");
 const session = require("express-session");
 const { sequelize } = require("./models/index"); // Import Sequelize instance
 const { insertSampleData } = require("./scripts/initializeData"); // Import the function to insert sample data
-const Razorpay = require("razorpay");
-
 const contactRoutes = require("./routes/contact");
 const orderRoutes = require("./routes/orderRoutes");
 const couponsRoute = require("./routes/coupons");
@@ -18,7 +16,6 @@ const excelimport  = require("./routes/import");
 // Import payment routes
 const authenticateToken = require("./middlewares/authMiddleware");
 const userRoutes = require("./routes/users");
-const paymentRoutes = require("./routes/paymentRoutes"); // Import payment routes
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -56,11 +53,6 @@ app.use(
   })
 );
 
-const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
 // Routes
 app.use("/users", userRoutes);
 app.use("/contact", contactRoutes);
@@ -71,9 +63,6 @@ app.use("/products", popularproductRoute);
 app.use("/otp", otpRoutes);
 app.use("/profile", profile);
 app.use("/import", excelimport);
-// Use payment routes
-app.use("/", authenticateToken, paymentRoutes);
-
 app.get('/api/check-session', (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Session expired" });
@@ -81,7 +70,7 @@ app.get('/api/check-session', (req, res) => {
   res.status(200).json({ message: "Session active" });
 });
 
-module.exports = { razorpayInstance };
+module.exports = { };
 
 // Start server and sync database
 sequelize

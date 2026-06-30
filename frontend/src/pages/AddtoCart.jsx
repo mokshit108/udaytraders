@@ -93,9 +93,6 @@ const AddtoCart = () => {
   );
 
   const navigate = useNavigate();
-  const handleCheckout = () => {
-    navigate("/checkout");
-  };
 
   const navigatehome = () => {
     navigate("/");
@@ -154,7 +151,6 @@ const AddtoCart = () => {
               </div>
               <CartTotal
                 subtotal={subtotal}
-                handleCheckout={handleCheckout}
               />
             </div>
           </>
