@@ -13,7 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState, useRef } from "react";
 import AddUserModal from "./modal/AddUserModal"; // Import the modal component
-import { useCart } from "../../../context/CartContext";
+import { useExcel } from "../../../hooks/useExcel";
 
 const AllUsers = () => {
   const [users, setUsers] = useState([]);
@@ -29,7 +29,7 @@ const AllUsers = () => {
   // const [importInfo, setImportInfo] = useState(null);
   // const fileInputRef = useRef(null);
 
-  const { downloadData, importExcelData } = useCart();
+  const { downloadData, importExcelData } = useExcel();
 
   const tableName = "User"; // Set the table name
 

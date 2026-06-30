@@ -7,7 +7,7 @@ const { sequelize } = require("./models/index"); // Import Sequelize instance
 const { insertSampleData } = require("./scripts/initializeData"); // Import the function to insert sample data
 const contactRoutes = require("./routes/contact");
 const orderRoutes = require("./routes/orderRoutes");
-const couponsRoute = require("./routes/coupons");
+
 const productRoute = require("./routes/productRoutes");
 const popularproductRoute = require("./routes/popularproductRoutes");
 const otpRoutes = require("./routes/otpRoutes");
@@ -57,7 +57,7 @@ app.use(
 app.use("/users", userRoutes);
 app.use("/contact", contactRoutes);
 app.use("/orders", orderRoutes);
-app.use("/coupons", couponsRoute);
+
 app.use("/productscategories", productRoute);
 app.use("/products", popularproductRoute);
 app.use("/otp", otpRoutes);

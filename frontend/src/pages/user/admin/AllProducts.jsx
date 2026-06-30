@@ -13,7 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState, useRef } from "react";
 import AddProductModal from "./modal/AddProductModal"; // Import the modal component
-import { useCart } from "../../../context/CartContext";
+import { useExcel } from "../../../hooks/useExcel";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
@@ -30,7 +30,7 @@ const AllProducts = () => {
   const [importInfo, setImportInfo] = useState(null);
   const fileInputRef = useRef(null);
 
-  const { downloadData, importExcelData } = useCart();
+  const { downloadData, importExcelData } = useExcel();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);

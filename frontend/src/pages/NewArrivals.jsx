@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { CartContext } from "../context/CartContext";
+
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,7 +7,6 @@ import { faTimes, faCheck, faFilter, faSort, faSortAmountDown, faSortAmountUp } 
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const NewArrivals = () => {
-  const { addToCart } = useContext(CartContext);
 
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [selectedCompany, setSelectedCompany] = useState("");
@@ -120,9 +119,6 @@ const NewArrivals = () => {
     setPriceRange([0, 10000]);
   };
 
-  const handleAddToCart = (product) => {
-    addToCart(product);
-  };
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -457,15 +453,7 @@ const NewArrivals = () => {
                           Restocking soon
                         </p>
                       )}
-                      <button
-                        className={`mt-2 py-2 w-full bg-sky-950 hover:bg-sky-700 text-white text-sm rounded-md ${
-                          !product.stock && "opacity-50 cursor-not-allowed"
-                        }`}
-                        onClick={() => handleAddToCart(product)}
-                        disabled={!product.stock}
-                      >
-                        {product.stock ? "Add to Cart" : "Out of Stock"}
-                      </button>
+
                     </div>
                   </div>
                 );

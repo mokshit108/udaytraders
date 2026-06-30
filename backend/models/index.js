@@ -31,7 +31,7 @@ const Company = require('./company')(sequelize, Sequelize.DataTypes);
 const Address = require('./address')(sequelize, Sequelize.DataTypes);
 const Payment = require('./payment')(sequelize, Sequelize.DataTypes);
 const OrderStatus = require('./orderStatus')(sequelize, Sequelize.DataTypes);
-const Coupon = require('./coupon')(sequelize, Sequelize.DataTypes);
+
 const Role = require('./role')(sequelize, Sequelize.DataTypes); // New Role model
 const Footer = require('./footer')(sequelize, Sequelize.DataTypes); // New Role model
 const Agent = require('./agent')(sequelize, Sequelize.DataTypes); // New Agent model
@@ -92,7 +92,7 @@ module.exports = {
   Address,
   Payment,
   OrderStatus,
-  Coupon,
+
   Role,
   Company,
   Footer,

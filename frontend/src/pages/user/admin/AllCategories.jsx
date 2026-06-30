@@ -13,7 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState, useRef  } from "react";
 import AddCategoryModal from "./modal/AddCategoryModal"; // Import the modal component
-import { useCart } from "../../../context/CartContext";
+import { useExcel } from "../../../hooks/useExcel";
 
 const AllCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -28,7 +28,7 @@ const AllCategories = () => {
   const [importInfo, setImportInfo] = useState(null);
   const fileInputRef = useRef(null);
 
-  const { downloadData, importExcelData } = useCart();
+  const { downloadData, importExcelData } = useExcel();
 
   const tableName = "Category"; // Set the table name
 

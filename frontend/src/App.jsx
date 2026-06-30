@@ -10,14 +10,13 @@ import {
   Services,
   SuperQuality,
 } from "./sections";
-import { NewArrivals, ContactUs, LoginCard, AddtoCart, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
-import { CartProvider } from "./context/CartContext"; // Import CartProvider
+import { NewArrivals, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
 import SuccessPage from "./components/SuccessPage";
 const App = () => {
   
   return (
-    <GoogleOAuthProvider clientId="1001498681170-m15bo7nppgv2i7p9iifps86i47o3hhgn.apps.googleusercontent.com"> 
-    <CartProvider> {/* Ensure CartProvider wraps all routes */}
+    <> 
+      <GoogleOAuthProvider clientId="1001498681170-m15bo7nppgv2i7p9iifps86i47o3hhgn.apps.googleusercontent.com">
       <Router>
         
         <main className="relative">
@@ -33,15 +32,15 @@ const App = () => {
             <Route path="/profile/*" element={<Profile />} />
             <Route path="/myorder/*" element={<OrderTimeline />} />
             <Route path="/product" element={<Product />} />
-            <Route path="/cart" element={<AddtoCart />} />
+
             <Route path="/success" element={<SuccessPage/>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
         </main>
       </Router>
-    </CartProvider>
-    </GoogleOAuthProvider>
+      </GoogleOAuthProvider>
+    </>
   );
 };
 

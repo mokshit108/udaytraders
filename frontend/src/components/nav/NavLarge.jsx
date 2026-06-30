@@ -7,15 +7,10 @@ import {
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { navLinks } from "../../constants";
-import { CartContext } from "../../context/CartContext";
+
 import { Link } from "react-router-dom"; // Import Link
 
-const NavLarge = ({ location, toggleCartSidebar, username, logout }) => {
-  const { cartItems } = React.useContext(CartContext);
-  const cartItemCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+const NavLarge = ({ location, username, logout }) => {
 
   return (
     <ul className="hidden md:flex flex-1 justify-center items-center gap-8 mt-10">
@@ -83,22 +78,7 @@ const NavLarge = ({ location, toggleCartSidebar, username, logout }) => {
             </Link>
           )}
         </div>
-        <div className="relative mr-20">
-          <button className="flex items-end group" onClick={toggleCartSidebar}>
-            <FontAwesomeIcon
-              icon={faShoppingCart}
-              className="text-xl mr-2 hover:text-sky-700 hover:underline hover:cursor-pointer"
-            />
-            {cartItemCount > 0 && (
-              <span className="bg-blue-500 text-white text-xs absolute -top-2 -right-2 rounded-full px-2">
-                {cartItemCount}
-              </span>
-            )}
-            <span className="hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-8 left-full transform -translate-x-1/2 whitespace-nowrap">
-              Add to Cart
-            </span>
-          </button>
-        </div>
+
       </li>
     </ul>
   );

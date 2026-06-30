@@ -2,7 +2,6 @@ import NewArrivals from "./NewArrivals";
 import ContactUs from "./ContactUs";
 import LoginSignupCard from "./LoginSignupCard";
 import LoginCard from "./LoginCard";
-import AddtoCart from "./AddtoCart";
 import Product from "./Product";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
@@ -16,7 +15,6 @@ export {
     ContactUs,
     LoginSignupCard,
     LoginCard,
-    AddtoCart,
     Product,
     ForgotPassword,
     ResetPassword,

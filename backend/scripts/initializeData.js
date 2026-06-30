@@ -1,4 +1,4 @@
-const { Category, Product, Coupon, OrderStatus, Role, Company, Footer } = require('../models');
+const { Category, Product, OrderStatus, Role, Company, Footer } = require('../models');
 
 async function insertSampleData() {
   try {
@@ -94,18 +94,6 @@ async function insertSampleData() {
         });
       }
 
-    // Insert Coupons if not already present
-    const coupons = [
-      //{ code: 'Mokshit10', discount: 10, expiration_date: '2024-08-27' },
-      { code: 'TAKE3', discount: 3, expiration_date: '2025-12-01' },
-    ];
-
-    for (const coupon of coupons) {
-      await Coupon.findOrCreate({
-        where: { code: coupon.code },
-        defaults: coupon
-      });
-    }
 
      // Insert footer data if not already present
      const footerSections = [

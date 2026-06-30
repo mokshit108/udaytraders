@@ -1,14 +1,14 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner,  faDownload, } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
-import { useCart } from "../../../context/CartContext";
+import { useExcel } from "../../../hooks/useExcel";
 
 const AllPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { downloadData } = useCart();
+  const { downloadData, importExcelData } = useExcel();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

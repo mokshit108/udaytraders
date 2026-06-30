@@ -9,7 +9,7 @@ import AllProducts from "./admin/AllProducts";
 import AllUsers from "./admin/AllUsers";
 import AllContactMessages from "./admin/AllContactMessages";
 import AllCategories from "./admin/AllCategories";
-import AllCoupons from "./admin/AllCoupons";
+
 import AllPayments from "./admin/AllPayments";
 import AllCompanies from "./admin/AllCompanies";
 import OrderStatus from "./admin/OrderStatus"; // Import the OrderStatus component
@@ -162,18 +162,7 @@ const Profile = () => {
                   All Company
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/profile/admin/all-coupons"
-                  className={`block p-2 text-lg hover:text-cyan-600 ${
-                    location.pathname === "/profile/admin/all-coupons"
-                      ? "bg-sky-950 text-white"
-                      : "text-sky-900"
-                  }`}
-                >
-                  All Coupons
-                </Link>
-              </li>
+
               <li>
                 <Link
                   to="/profile/admin/all-payments"
@@ -250,7 +239,7 @@ const Profile = () => {
                   element={<AllCategories />}
                 />
                 <Route path="admin/all-companies" element={<AllCompanies />} />
-                <Route path="admin/all-coupons" element={<AllCoupons />} />
+
                 <Route path="admin/all-payments" element={<AllPayments />} />
                 <Route
                   path="admin/all-orders/order-timeline"

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faDownload, } from "@fortawesome/free-solid-svg-icons";
-import { useCart } from "../../../context/CartContext";
+import { useExcel } from "../../../hooks/useExcel";
 
 const AllContactMessages = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { downloadData } = useCart();
+  const { downloadData, importExcelData } = useExcel();
 
   const handleDownloadExcel = () => {
     downloadData(messages, 'AllMessages');

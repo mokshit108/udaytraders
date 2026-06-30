@@ -8,23 +8,17 @@ import {
   faTimes,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import { CartContext } from "../../context/CartContext";
+
 import { navLinks } from "../../constants";
 import { Link } from "react-router-dom"; // Import Link
 
 const NavMobile = ({
-  toggleCartSidebar,
   username,
   roleid,
   logout,
   menuOpen,
   toggleMenu,
 }) => {
-  const { cartItems } = React.useContext(CartContext);
-  const cartItemCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
 
   return (
     <>
@@ -78,23 +72,7 @@ const NavMobile = ({
                 </span>
               </Link>
             )}
-            <button
-              className="relative flex items-center group"
-              onClick={toggleCartSidebar}
-            >
-              <FontAwesomeIcon
-                icon={faShoppingCart}
-                className="text-xl hover:text-sky-700 hover:underline hover:cursor-pointer"
-              />
-              {cartItemCount > 0 && (
-                <span className="bg-blue-500 text-white text-xs absolute -top-2 -right-2 rounded-full px-2">
-                  {cartItemCount}
-                </span>
-              )}
-              <span className="hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-10 left-1/2 transform -translate-x-1/2 mt-2 whitespace-nowrap">
-                Add to Cart
-              </span>
-            </button>
+
           </div>
         </div>
       </header>
@@ -209,18 +187,7 @@ const NavMobile = ({
                   All Company
                 </Link>
               </li>
-              <li className="w-full text-center border-gray-200 border-b">
-                <Link
-                  to="/profile/admin/all-coupons"
-                  className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
-                    location.pathname === "/profile/admin/all-coupons"
-                      ? "text-sky-400"
-                      : ""
-                  }`}
-                >
-                  All Coupons
-                </Link>
-              </li>
+
               <li className="w-full text-center border-gray-200 border-b">
                 <Link
                   to="/profile/admin/all-payments"
