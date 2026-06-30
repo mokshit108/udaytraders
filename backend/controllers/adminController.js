@@ -1,0 +1,319 @@
+const pool = require("../config/db");
+const { User, Product, Role, ContactMessage, Category, Coupon, Payment, Company } = require("../models");
+
+const getAllOrders = async (req, res) => {
+  try {
+    const { status } = req.params;
+
+    // Base query
+    let query = `
+      SELECT o.id AS order_id,
+             o.order_code AS o_code,
+             o.created_at,
+             o.shipping_date,
+             o.delivery_date,
+             s.status AS status,
+             p.img_url AS product_image,
+             p.name AS product_name,
+             c.name AS company_name,
+             u.username AS user,
+             pay.final_amount,
+             pay.discount_percentage,
+             oi.quantity,
+             oi.price,
+             o.agent_id AS assignedAgentId
+      FROM orders o
+      JOIN order_items oi ON o.id = oi.order_id
+      JOIN products p ON oi.product_id = p.id
+      JOIN companies c ON p.company_id = c.id
+      JOIN users u ON o.user_id = u.id
+      JOIN order_status s ON o.status_id = s.id
+      JOIN payments pay ON o.id = pay.o_id
+      LEFT JOIN agents a ON o.agent_id = a.id
+    `;
+
+    // Check if status is provided and modify the query
+    if (status) {
+      query += ` WHERE s.status = $1`; // Use parameterized query to prevent SQL injection
+    }
+
+    query += ` ORDER BY o.created_at DESC`;
+
+    // Execute the query with parameters
+    const ordersResult = await pool.query(query, status ? [status] : []);
+
+    res.json({ orders: ordersResult.rows });
+  } catch (err) {
+    console.error("Error in getAllOrders:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  const { orderId, status } = req.body;
+
+  try {
+    // Check if the status is valid
+    const validStatuses = [
+      "Pending",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+      "Returned",
+      "Refunded",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+
+    // Update the order status in the database
+    const result = await pool.query(
+      `UPDATE orders
+         SET status_id = (SELECT id FROM order_status WHERE status = $1)
+         WHERE id = $2`,
+      [status, orderId]
+    );
+
+    // Check if the order was updated
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Return a success response
+    res.json({ message: "Order status updated successfully" });
+  } catch (err) {
+    console.error("Error in updateOrderStatus:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const updateShippingDate = async (req, res) => {
+  const { orderId, shippingDate } = req.body;
+
+  try {
+    // Update the shipping date in the database
+    const result = await pool.query(
+      `UPDATE orders
+       SET shipping_date = $1
+       WHERE id = $2`,
+      [shippingDate, orderId]
+    );
+
+    // Check if the order was updated
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Return a success response
+    res.json({ message: "Shipping date updated successfully" });
+  } catch (err) {
+    console.error("Error in updateShippingDate:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const updateDeliveryDate = async (req, res) => {
+  const { orderId, deliveryDate } = req.body;
+
+  try {
+    // Update the delivery date in the database
+    const result = await pool.query(
+      `UPDATE orders
+       SET delivery_date = $1
+       WHERE id = $2`,
+      [deliveryDate, orderId]
+    );
+
+    // Check if the order was updated
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Return a success response
+    res.json({ message: "Delivery date updated successfully" });
+  } catch (err) {
+    console.error("Error in updateDeliveryDate:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      attributes: [
+        "id",
+        "name",
+        "description",
+        "price",
+        "stock",
+        "category_id",
+        "img_url",
+        "company_id",
+        "is_popular"
+      ],
+      include: [
+        {
+          model: Category, // Include the Category model
+          attributes: ["name"], // Fetch only the 'name' field from the Category model
+        },
+        {
+          model: Company, // Include the Company model
+          attributes: ["name"], // Fetch only the 'name' field from the Company model
+        },
+      ],
+    });
+
+    // Map through the products to create a new array with the category name included
+    const productsWithCategoryCompanyName = products.map((product) => {
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        stock: product.stock,
+        img_url: product.img_url,
+        company_id: product.company_id,
+        company_name: product.Company ? product.Company.name : null,
+        category_id: product.category_id,
+        category_name: product.Category ? product.Category.name : null,
+        is_popular: product.is_popular // Add category name to product
+      };
+    });
+
+    res.json({ products: productsWithCategoryCompanyName }); // Return the modified products array
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Unable to fetch products" });
+  }
+};
+
+// Fetch all users
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ["id", "username", "email", "phone", "created_at"], // Specify the fields to fetch from User
+      include: [
+        {
+          model: Role, // Include the Role model
+          attributes: ["name"], // Fetch only the 'name' field from the Role model
+        },
+      ],
+    });
+
+    // Map through the users to create a new array with the role name included
+    const usersWithRoleName = users.map((user) => {
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        created_at: user.created_at,
+        role_name: user.Role ? user.Role.name : null, // Add role name to user
+      };
+    });
+
+    res.json({ users: usersWithRoleName }); // Return the modified users array
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Unable to fetch users" });
+  }
+};
+
+const getAllMessages = async (req, res) => {
+  try {
+    const messages = await ContactMessage.findAll();
+    res.json({ messages });
+  } catch (err) {
+    console.error("Error in getAllMessages:", err.message);
+    res.status(500).json({ error: "Unable to fetch contact messages" });
+  }
+};
+
+const getAllCategories = async (req, res) => {
+  try {
+    const categories = await Category.findAll();
+    res.json({ categories });
+  } catch (err) {
+    console.error("Error in getAllCategories:", err.message);
+    res.status(500).json({ error: "Unable to fetch categories" });
+  }
+};
+
+const getAllCoupons = async (req, res) => {
+  try {
+    const coupons = await Coupon.findAll();
+    res.json({ coupons });
+  } catch (err) {
+    console.error("Error in getAllCoupons:", err.message);
+    res.status(500).json({ error: "Unable to fetch coupons" });
+  }
+};
+
+const getAllPayments = async (req, res) => {
+  try {
+    const payments = await Payment.findAll({
+      include: [
+        {
+          model: User, // Ensure you import the User model
+          attributes: ['username'], // Specify the fields you want to retrieve from the User table
+        },
+      ],
+    });
+
+    // Map the payments to include user name
+    const formattedPayments = payments.map(payment => ({
+      id: payment.id,
+      userName: payment.User ? payment.User.username : null, // Get user name from associated User model
+      order_id: payment.order_id,
+      o_id: payment.o_id,
+      final_amount: payment.final_amount,
+      discount_amount: payment.discount_amount,
+      discount_percentage: payment.discount_percentage,
+      total_amount: payment.total_amount,
+      method: payment.method,
+      transaction_id: payment.transaction_id,
+      status: payment.status,
+      created_at: payment.created_at,
+    }));
+
+    res.json({ payments: formattedPayments });
+  } catch (err) {
+    console.error("Error in getAllPayments:", err.message);
+    res.status(500).json({ error: "Unable to fetch payments" });
+  }
+};
+
+const getAllRoles = async (req, res) => {
+  try {
+    const roles = await Role.findAll(); // Assuming Role is a Sequelize model
+    res.json({ roles });
+  } catch (err) {
+    console.error("Error in getAllRoles:", err.message);
+    res.status(500).json({ error: "Unable to fetch roles" });
+  }
+};
+
+const getAllCompany = async (req, res) => {
+  try {
+    const companies = await Company.findAll();
+    res.json({ companies });
+  } catch (err) {
+    console.error("Error in getAllCompany:", err.message);
+    res.status(500).json({ error: "Unable to fetch companies" });
+  }
+};
+
+module.exports = {
+  getAllOrders,
+  updateOrderStatus,
+  updateShippingDate,
+  updateDeliveryDate,
+  getAllProducts,
+  getAllUsers,
+  getAllMessages,
+  getAllCategories,
+  getAllCoupons,
+  getAllPayments,
+  getAllRoles,
+  getAllCompany
+};

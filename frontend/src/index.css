@@ -1,0 +1,125 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&family=Palanquin:wght@100;200;300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Palanquin:wght@100;200;300;400;500;600;700&display=swap");
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+@layer components {
+  .max-container {
+    max-width: 2560px;
+    margin: 0 auto;
+  }
+
+  .input {
+    @apply sm:flex-1 max-sm:w-full text-base leading-normal text-slate-gray pl-5 max-sm:p-5 outline-none sm:border-none border max-sm:border-slate-gray max-sm:rounded-full;
+  }
+}
+
+@keyframes underline-animate {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.underline-animation {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  padding-bottom: 4px; /* Adjust padding below the text for spacing */
+}
+
+.underline-animation::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0; /* Adjust position from the bottom of the text */
+  width: 100%;
+  height: 2px; /* Adjust thickness of the underline */
+  background-color: #38bdf8; /* Tailwind Sky-500 */
+  transform: scaleX(0);
+  transform-origin: bottom left;
+  transition: transform 0.3s ease; /* Smooth animation */
+}
+
+
+
+.underline-animation:hover::after {
+  transform: scaleX(1);
+}
+
+
+
+@layer utilities {
+  /* Initial state before animation */
+  .fade-in-section {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  /* Class added when the element is in view */
+  .fade-in-section.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .padding {
+    @apply sm:px-16 px-8 sm:pt-32 sm:pb-10 py-12 pt-20;
+  }
+  .padding-leftright {
+    @apply sm:px-16 px-2 sm:pt-8 sm:pb-8 py-5;
+  }
+  .padding-topbottom {
+    @apply  sm:pt-32 sm:pb-10 py-12 pt-20;
+  }
+  .padding-topsection{
+    @apply sm:px-16 sm:pt-10 sm:pb-10 md:px-12 px-2 md:pt-28 md:pb-10 py-4 max-sm:pt-12;
+  }
+
+  .padding-x {
+    @apply sm:px-16 px-8;
+  }
+
+  .padding-y {
+    @apply sm:py-24 py-12;
+  }
+
+  .padding-l {
+    @apply sm:pl-16 pl-8;
+  }
+
+  .padding-r {
+    @apply sm:pr-16 pr-8;
+  }
+
+  .padding-t {
+    @apply sm:pt-24 pt-12;
+  }
+
+  .padding-top {
+    @apply sm:pt-32 pt-32;
+  }
+
+  .padding-b {
+    @apply sm:pb-24 pb-12;
+  }
+
+  .info-text {
+    @apply font-montserrat text-slate-gray text-lg leading-7;
+  }
+}
+
+
+
