@@ -23,7 +23,15 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(bodyParser.json());
 const corsOptions = {
-  origin: ['https://onestopbathsolution.onrender.com', 'https://websitefrontend.onrender.com', 'https://websitebackend-sx9w.onrender.com/products/popular', 'https://www.onestopbath.in', 'https://onestopbath.in/'],
+  origin: [
+    'https://onestopbathsolution.onrender.com', 
+    'https://websitefrontend.onrender.com', 
+    'https://websitebackend-sx9w.onrender.com/products/popular', 
+    'https://www.onestopbath.in', 
+    'https://onestopbath.in/',
+    'http://localhost:5173',
+    'http://localhost:5174'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

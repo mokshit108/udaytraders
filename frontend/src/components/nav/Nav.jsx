@@ -4,7 +4,6 @@ import NavMobile from "./NavMobile";
 import NavLarge from "./NavLarge";
 import useSessionTimeout from "../../hooks/useSessionTimeout";
 import '../../index.css';
-import TypingCarousel  from "./TypingCarousel";
 
 const Nav = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,7 +31,6 @@ const Nav = () => {
     <>
    
  <header className="py-5 absolute z-10 w-full bg-sky-950 text-white font-semibold lg:fixed">
- <TypingCarousel style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 50 }} />
      <NavLarge
           username={username}
           location={location}

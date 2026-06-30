@@ -35,7 +35,7 @@ const Footer = () => {
       <div className='flex justify-between items-start gap-10 flex-wrap max-lg:flex-col'>
         <div className='flex flex-col items-start'>
           <h3 className="max-md:text-3xl text-4xl font-palanquin font-bold text-white">
-            One Stop Bath
+            Uday Traders
           </h3>
           <p className='mt-6 text-base leading-7 font-montserrat text-white-400 sm:max-w-sm'>
             Your premium destination for top-quality bathroom essentials.

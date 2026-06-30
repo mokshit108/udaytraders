@@ -13,7 +13,7 @@ import { Link } from "react-router-dom"; // Import Link
 const NavLarge = ({ location, username, logout }) => {
 
   return (
-    <ul className="hidden md:flex flex-1 justify-center items-center gap-8 mt-10">
+    <ul className="hidden md:flex flex-1 justify-center items-center gap-8">
       {/* Logo */}
       <Link to="/" className="flex items-center">
         <img

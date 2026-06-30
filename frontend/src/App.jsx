@@ -5,9 +5,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google"; // Import GoogleOAuth
 import Nav from "./components/nav/Nav";
 import {
   Footer,
-  Homehero,
   PopularProducts,
-  Services,
   SuperQuality,
 } from "./sections";
 import { NewArrivals, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
@@ -68,15 +66,10 @@ const Home = () => {
 
   return (
     <>
-      <section
-        ref={(el) => (sectionsRef.current[0] = el)}
-        className="fade-in-section"
-      >
-        <Homehero />
-      </section>
+
       <section
         ref={(el) => (sectionsRef.current[1] = el)}
-        className="fade-in-section padding-leftright"
+        className="fade-in-section padding-leftright pt-24 lg:pt-32"
       >
         <PopularProducts />
       </section>
@@ -86,12 +79,7 @@ const Home = () => {
       >
         <SuperQuality />
       </section>
-      <section
-        ref={(el) => (sectionsRef.current[3] = el)}
-        className="fade-in-section padding-leftright mb-4"
-      >
-        <Services />
-      </section>
+
     </>
   );
 };

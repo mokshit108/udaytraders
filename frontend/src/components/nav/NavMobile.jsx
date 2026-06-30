@@ -22,7 +22,7 @@ const NavMobile = ({
 
   return (
     <>
-      <header className="mt-10 fixed py-4 top-0 left-0 w-full bg-sky-950  text-white font-semibold z-50 md:hidden">
+      <header className="fixed py-4 top-0 left-0 w-full bg-sky-950  text-white font-semibold z-50 md:hidden">
         {/* Your mobile navigation content here */}
         <div className="flex justify-between items-center p-4">
           <button className="flex items-center" onClick={toggleMenu}>
@@ -78,7 +78,7 @@ const NavMobile = ({
       </header>
 
       <nav
-        className={`fixed top-32 left-0 w-full bg-sky-950 text-white z-50 overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`fixed top-20 left-0 w-full bg-sky-950 text-white z-50 overflow-hidden transition-all duration-300 ease-in-out ${
           menuOpen ? "max-h-screen" : "max-h-0"
         }`}
         style={{ maxHeight: menuOpen ? "calc(100vh - 64px)" : "0" }} // Adjust height based on the content
