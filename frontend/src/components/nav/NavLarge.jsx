@@ -26,16 +26,18 @@ const NavLarge = ({ location, username, logout }) => {
       {/* Navigation Links */}
       <div className="flex-1 flex justify-center items-center md:gap-8 lg:gap-16">
         {navLinks.map((item) => (
-          <li key={item.label}>
-            <Link
-              to={item.href}
-              className={`block py-4 font-palanquin text-xl text-start text-white hover:text-cyan-400 underline-animation ${
-                location.pathname === item.href ? "text-sky-400" : ""
-              }`}
-            >
-              {item.label}
-            </Link>
-          </li>
+          (item.label !== "Products" || username) && (
+            <li key={item.label}>
+              <Link
+                to={item.href}
+                className={`block py-4 font-palanquin text-xl text-start text-white hover:text-cyan-400 underline-animation ${
+                  location.pathname === item.href ? "text-sky-400" : ""
+                }`}
+              >
+                {item.label}
+              </Link>
+            </li>
+          )
         ))}
       </div>
 

@@ -26,11 +26,16 @@ const LoginCard = () => {
     email: "",
     phoneNumber: "",
     password: "",
+    specialCode: "",
   });
+  const [googleSignupToken, setGoogleSignupToken] = useState(null);
+  const [showGoogleCodeInput, setShowGoogleCodeInput] = useState(false);
+  const [googleSpecialCode, setGoogleSpecialCode] = useState("");
+  const [googlePhoneNumber, setGooglePhoneNumber] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isAgent, setIsAgent] = useState(false);
+
   const [loading, setLoading] = useState(false); // State for loading
 
   const navigate = useNavigate();
@@ -84,15 +89,30 @@ const LoginCard = () => {
     setShowPassword((prevState) => !prevState);
   };
 
-  const handleGoogleSignup = async (response) => {
+  const handleGoogleSignup = (response) => {
+    // Store token and ask for special code instead of calling backend immediately
+    setGoogleSignupToken(response.credential);
+    setShowGoogleCodeInput(true);
+  };
+
+  const submitGoogleSignupWithCode = async () => {
+    if (!googleSpecialCode) {
+      setErrorMessage("Please enter the special code.");
+      return;
+    }
+    if (!/^\d{10}$/.test(googlePhoneNumber)) {
+      setErrorMessage("Phone number must be exactly 10 digits.");
+      return;
+    }
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
       const backendResponse = await fetch(`${apiUrl}/users/google-signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: response.credential,
-          isAgent: isAgent // Pass the agent status
+          token: googleSignupToken,
+          specialCode: googleSpecialCode,
+          phoneNumber: googlePhoneNumber,
         }),
       });
 
@@ -122,21 +142,17 @@ const LoginCard = () => {
 
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    if (type === "checkbox") {
-      setIsAgent(e.target.checked); // Set isAgent based on checkbox state (checked = true, unchecked = false)
+    const { name, value } = e.target;
+    if (isLogin) {
+      setLoginFormData({
+        ...loginFormData,
+        [name]: value,
+      });
     } else {
-      if (isLogin) {
-        setLoginFormData({
-          ...loginFormData,
-          [name]: value,
-        });
-      } else {
-        setSignupFormData({
-          ...signupFormData,
-          [name]: value,
-        });
-      }
+      setSignupFormData({
+        ...signupFormData,
+        [name]: value,
+      });
     }
   };
 
@@ -154,10 +170,6 @@ const LoginCard = () => {
     const apiUrl = import.meta.env.VITE_API_URL;
     const formData = isLogin ? loginFormData : signupFormData;
 
-    // Add role_id and agent if the user selects the checkbox
-    if (!isLogin) {
-      formData.agent = isAgent; // This will set `formData.agent` to true if isAgent is true, false if not
-    }
 
     const endpoint = isLogin
       ? `${apiUrl}/users/login`
@@ -202,6 +214,7 @@ const LoginCard = () => {
           email: "",
           phoneNumber: "",
           password: "",
+          specialCode: "",
         });
       }
 
@@ -330,6 +343,17 @@ const LoginCard = () => {
                     renderValidationIcon={renderValidationIcon}
                     required
                   />
+                  <FormField
+                    label="Special Code"
+                    name="specialCode"
+                    type="text"
+                    value={signupFormData.specialCode}
+                    onChange={handleChange}
+                    placeholder="Enter Admin Special Code"
+                    validationError={validationErrors.specialCode}
+                    renderValidationIcon={renderValidationIcon}
+                    required
+                  />
                 </>
               )}
 
@@ -389,34 +413,52 @@ const LoginCard = () => {
                 {isLogin ? "Sign In" : "Create Account"}
               </button>
 
-              {!isLogin && (
-                <div className="my-4 mb-12">
-                  <label className="flex items-center font-medium justify-start">
-                    <input
-                      type="checkbox"
-                      checked={isAgent}
-                      onChange={handleChange}
-                      className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
-                    />
-                    <span className="text-black ml-1 text-sm font-semibold font-montserrat">
-                      Select for Delivery Agent Signup
-                    </span>
-                    <FontAwesomeIcon
-                      icon={faCheck}
-                      className="absolute top-0 left-0 mt-1 ml-1 text-sky-950 opacity-0 checked:opacity-100"
-                    />
-                  </label>
-                </div>
-              )}
 
               {!isLogin ? (
                 <div className="m-4">
-                  <GoogleLogin
-                    text="signup_with"
-                    onSuccess={handleGoogleSignup}
-                    onError={() => setErrorMessage("Google signup failed. Please try again.")}
-                    useOneTap
-                  />
+                  {!showGoogleCodeInput ? (
+                    <GoogleLogin
+                      text="signup_with"
+                      onSuccess={handleGoogleSignup}
+                      onError={() => setErrorMessage("Google signup failed. Please try again.")}
+                      useOneTap
+                    />
+                  ) : (
+                    <div className="flex flex-col gap-2 p-4 border border-gray-300 rounded">
+                      <p className="text-sm font-semibold text-center mb-2">Google Account Selected</p>
+                      <input
+                        type="tel"
+                        placeholder="Enter Phone Number"
+                        className="w-full px-4 py-2 border rounded"
+                        value={googlePhoneNumber}
+                        onChange={(e) => setGooglePhoneNumber(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Enter Special Code"
+                        className="w-full px-4 py-2 border rounded"
+                        value={googleSpecialCode}
+                        onChange={(e) => setGoogleSpecialCode(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={submitGoogleSignupWithCode}
+                        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mt-2"
+                      >
+                        Complete Google Signup
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowGoogleCodeInput(false);
+                          setGoogleSignupToken(null);
+                        }}
+                        className="w-full text-red-600 underline text-sm mt-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="m-4">

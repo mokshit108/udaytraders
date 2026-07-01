@@ -1,11 +1,8 @@
-
 import Nav from "../components/nav/Nav";
 import { ContactSideImg } from "../assets/images";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhone, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import FAQAccordion from "../components/contact/FAQAccordion";
-import ContactForm from "../components/contact/ContactForm";
 
 const ContactUs = () => {
 
@@ -13,14 +10,14 @@ const ContactUs = () => {
     <>
       <Nav />
       <section
-        className="flex padding-topbottom py-8 md:px-8 max-md:mt-16 flex-col lg:flex-row md:gap-8"
+        className="flex padding-topbottom py-8 md:px-8 max-md:mt-16 flex-col lg:flex-row md:gap-8 min-h-screen"
       >
         <div className="flex items-center mt-4 justify-center w-full md:flex-1">
           <img src={ContactSideImg} alt="Image" width={650} />
         </div>
 
-        <div className="flex justify-center w-full md:flex-1">
-          <div className="text-center border-t-2 border-t-gray-100 shadow-lg shadow-neutral-400 relative py-2 max-lg:py-5">
+        <div className="flex justify-center items-center w-full md:flex-1">
+          <div className="text-center border-t-2 border-t-gray-100 shadow-lg shadow-neutral-400 relative py-8 max-lg:py-5 w-full max-w-2xl rounded-lg">
             <h3 className="max-md:text-3xl text-4xl font-palanquin font-bold p-4">
               Contact
               <span className="text-sky-900"> Us </span>
@@ -45,35 +42,11 @@ const ContactUs = () => {
                 <span>We will Get back in 1-2 Days</span>
               </div>
             </div>
-            <p className="font-montserrat text-md p-3">
+            <p className="font-montserrat text-md p-3 mt-4">
               <span className="font-semibold">Business Queries: </span>
               xxxxxx04@gmail.com
             </p>
           </div>
-        </div>
-      </section>
-      <section
-        className="flex flex-col justify-center lg:flex-row lg:min-h-screen lg:px-8 lg:-mt-8"
-      >
-        <div className="px-8 border-t-2 border-t-gray-100 shadow-lg m-5 shadow-neutral-400 lg:w-1/2 lg:px-8">
-          <h3 className="max-md:text-3xl text-4xl font-palanquin font-bold text-center">
-            Get In
-            <span className="text-sky-900"> Touch </span>
-          </h3>
-          <p className="mt-4 font-montserrat text-sky-950 text-md">
-            Let us know how we can help by completing the form. We typically
-            respond in a day.
-          </p>
-
-          <ContactForm />
-        </div>
-
-        <div className="w-full p-2 lg:w-1/2">
-          <h3 className="max-md:text-3xl text-4xl font-palanquin font-bold text-center">
-            Top
-            <span className="text-sky-900"> FAQ </span>
-          </h3>
-          <FAQAccordion />
         </div>
       </section>
     </>

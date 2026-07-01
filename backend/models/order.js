@@ -50,14 +50,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false, 
       },
-      agent_id: {
-        type: DataTypes.INTEGER,
-        references: {
-          model: "agents",
-          key: "id",
-        },
-        allowNull: true, // Allows null if not yet assigned
-      },
+
     },
     {
       tableName: "orders",
@@ -70,8 +63,6 @@ module.exports = (sequelize, DataTypes) => {
     Order.belongsTo(models.Address, { foreignKey: "address_id" });
     Order.belongsTo(models.OrderStatus, { foreignKey: "status_id" });
     Order.hasMany(models.OrderItem, { foreignKey: "order_id" });
-    Order.hasOne(models.Payment, { foreignKey: "o_id" });
-    Order.belongsTo(models.Agent, { foreignKey: "agent_id" }); // Link orders to agents
   };
 
   return Order;

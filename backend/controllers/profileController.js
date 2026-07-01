@@ -41,14 +41,14 @@ const getUserOrders = async (req, res) => {
       s.status AS status,
       p.img_url AS product_image,
       p.name AS product_name,
-      pay.final_amount AS final_amount,
+
       oi.quantity,
       oi.price
 FROM orders o
 JOIN order_items oi ON o.id = oi.order_id
 JOIN products p ON oi.product_id = p.id
 JOIN order_status s ON o.status_id = s.id
-JOIN payments pay ON o.id = pay.o_id
+
 WHERE o.user_id = $1
 ORDER BY o.created_at DESC`,
       [userId]

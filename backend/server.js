@@ -5,7 +5,6 @@ const cors = require("cors");
 const session = require("express-session");
 const { sequelize } = require("./models/index"); // Import Sequelize instance
 const { insertSampleData } = require("./scripts/initializeData"); // Import the function to insert sample data
-const contactRoutes = require("./routes/contact");
 const orderRoutes = require("./routes/orderRoutes");
 
 const productRoute = require("./routes/productRoutes");
@@ -63,7 +62,6 @@ app.use(
 
 // Routes
 app.use("/users", userRoutes);
-app.use("/contact", contactRoutes);
 app.use("/orders", orderRoutes);
 
 app.use("/productscategories", productRoute);

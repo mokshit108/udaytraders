@@ -216,11 +216,12 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // };
 
 const registerUser = async (req, res) => {
-  const { username, email, phoneNumber, password, agent } = req.body;
-  let role_id = 2; // Default role for new users (customer)
+  const { username, email, phoneNumber, password, specialCode } = req.body;
+  let role_id = 2; // customer
 
-  if (agent) {
-    role_id = 3; // Agent role
+  const SPECIAL_CODE = process.env.SPECIAL_CODE || "UDAY04";
+  if (specialCode !== SPECIAL_CODE) {
+    return res.status(403).json({ error: "Invalid special code for registration." });
   }
 
   try {
@@ -234,47 +235,21 @@ const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-     // Check if the user is an agent and handle accordingly
-     if (role_id === 3) {
-      // Insert into users table
-      const newUser = await pool.query(
-        "INSERT INTO users (username, email, phone, password, role_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *",
-        [username, email, phoneNumber, hashedPassword, role_id]
-      );
+    // Regular user registration
+    const newUser = await pool.query(
+      "INSERT INTO users (username, email, phone, password, role_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *",
+      [username, email, phoneNumber, hashedPassword, role_id]
+    );
 
-      // Retrieve the id of the newly inserted user
-      const userId = newUser.rows[0].id;
+    const accessToken = jwt.sign(
+      { id: newUser.rows[0].id, username: newUser.rows[0].username, role_id: newUser.rows[0].role_id },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "1h" }
+    );
 
-      // Insert into agents table if agent is passed
-      const newAgent = await pool.query(
-        "INSERT INTO agents (name, user_id, created_at) VALUES ($1, $2, NOW()) RETURNING *",
-        [username, userId]  // Insert the username and user_id into agents
-      );
+    req.session.accessToken = accessToken;
 
-      const accessToken = jwt.sign(
-        { id: newUser.rows[0].id, username: newUser.rows[0].username, role_id: newUser.rows[0].role_id },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      return res.status(201).json({ accessToken, user: newUser.rows[0] });
-    } else {
-      // Regular user registration
-      const newUser = await pool.query(
-        "INSERT INTO users (username, email, phone, password, role_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *",
-        [username, email, phoneNumber, hashedPassword, role_id]
-      );
-
-      const accessToken = jwt.sign(
-        { id: newUser.rows[0].id, username: newUser.rows[0].username, role_id: newUser.rows[0].role_id },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      req.session.accessToken = accessToken;
-
-      return res.status(201).json({ accessToken, user: newUser.rows[0] });
-    }
+    return res.status(201).json({ accessToken, user: newUser.rows[0] });
   } catch (err) {
     console.error("Error in registerUser:", err.message);
     res.status(400).json({ error: err.message });
@@ -388,8 +363,13 @@ const registerPhoneNumber = async (req, res) => {
 };
 
 const handleGoogleSignup = async (req, res) => {
-  const { token, isAgent } = req.body;
-  let role_id = isAgent ? 3 : 2; // 3 for agent, 2 for customer
+  const { token, specialCode, phoneNumber } = req.body;
+  let role_id = 2; // customer
+
+  const SPECIAL_CODE = process.env.SPECIAL_CODE || "UDAY04";
+  if (specialCode !== SPECIAL_CODE) {
+    return res.status(403).json({ error: "Invalid special code for registration." });
+  }
 
   if (!token) {
     return res.status(400).json({ error: 'Token is required' });
@@ -422,26 +402,19 @@ const handleGoogleSignup = async (req, res) => {
 
       // Insert new user
       const insertUserQuery = `
-        INSERT INTO users (google_id, email, username, role_id, created_at)
-        VALUES ($1, $2, $3, $4, NOW())
+        INSERT INTO users (google_id, email, username, phone, role_id, created_at)
+        VALUES ($1, $2, $3, $4, $5, NOW())
         RETURNING *;
       `;
       const newUser = await dbClient.query(insertUserQuery, [
         googleId,
         email,
         name,
+        phoneNumber || null,
         role_id
       ]);
 
-      // If user is an agent, create agent record
-      if (role_id === 3) {
-        const insertAgentQuery = `
-          INSERT INTO agents (name, user_id, created_at)
-          VALUES ($1, $2, NOW())
-          RETURNING *;
-        `;
-        await dbClient.query(insertAgentQuery, [name, newUser.rows[0].id]);
-      }
+
 
       await dbClient.query('COMMIT');
 

@@ -85,20 +85,22 @@ const NavMobile = ({
       >
         <ul className="flex flex-col items-center mt-3 mb-2">
           {navLinks.map((item) => (
-            <li
-              key={item.label}
-              className="w-full text-center border-gray-200 border-b"
-            >
-              <Link
-                to={item.href}
-                className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
-                  location.pathname === item.href ? "text-sky-400" : ""
-                }`}
-                onClick={() => toggleMenu()}
+            (item.label !== "Products" || username) && (
+              <li
+                key={item.label}
+                className="w-full text-center border-gray-200 border-b"
               >
-                {item.label}
-              </Link>
-            </li>
+                <Link
+                  to={item.href}
+                  className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
+                    location.pathname === item.href ? "text-sky-400" : ""
+                  }`}
+                  onClick={() => toggleMenu()}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            )
           ))}
 
           {roleid == 1 ? ( // Check if user exists and role_id is 1
@@ -151,18 +153,7 @@ const NavMobile = ({
                   All Users
                 </Link>
               </li>
-              <li className="w-full text-center border-gray-200 border-b">
-                <Link
-                  to="/profile/admin/all-messages"
-                  className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
-                    location.pathname === "/profile/admin/all-messages"
-                      ? "text-sky-400"
-                      : ""
-                  }`}
-                >
-                  All Contact Messages
-                </Link>
-              </li>
+
               <li className="w-full text-center border-gray-200 border-b">
                 <Link
                   to="/profile/admin/all-categories"
@@ -188,34 +179,9 @@ const NavMobile = ({
                 </Link>
               </li>
 
-              <li className="w-full text-center border-gray-200 border-b">
-                <Link
-                  to="/profile/admin/all-payments"
-                  className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
-                    location.pathname === "/profile/admin/all-payments"
-                      ? "text-sky-400"
-                      : ""
-                  }`}
-                >
-                  All Payments
-                </Link>
-              </li>
+
             </>
-          ) : roleid == 3 ? (
-            <>
-              <li>
-                <Link
-                  to="/profile/agent/all-orders"
-                  className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
-                    location.pathname === "/profile/agent/all-orders"
-                      ? "text-sky-400"
-                      : ""
-                  }`}
-                >
-                  Assigned Orders
-                </Link>
-              </li>
-            </>
+
           ) : (
             <li className="w-full text-center border-gray-200 border-b">
               <Link

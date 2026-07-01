@@ -7,15 +7,10 @@ import MyOrders from "./MyOrders";
 import AllOrders from "./admin/AllOrders";
 import AllProducts from "./admin/AllProducts";
 import AllUsers from "./admin/AllUsers";
-import AllContactMessages from "./admin/AllContactMessages";
-import AllCategories from "./admin/AllCategories";
 
-import AllPayments from "./admin/AllPayments";
+import AllCategories from "./admin/AllCategories";
 import AllCompanies from "./admin/AllCompanies";
 import OrderStatus from "./admin/OrderStatus"; // Import the OrderStatus component
-import AdminOrderTimeline from "./admin/AdminOrderTimeline";
-import AgentOrders from "./agent/AgentOrders";
-import AgentOrderTimeline from "./agent/AgentOrderTimeline";
 
 const Profile = () => {
   const location = useLocation();
@@ -126,18 +121,7 @@ const Profile = () => {
                   All Users
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/profile/admin/all-messages"
-                  className={`block p-2 text-lg hover:text-cyan-600 ${
-                    location.pathname === "/profile/admin/all-messages"
-                      ? "bg-sky-950 text-white"
-                      : "text-sky-900"
-                  }`}
-                >
-                  All Contact Messages
-                </Link>
-              </li>
+
               <li>
                 <Link
                   to="/profile/admin/all-categories"
@@ -163,34 +147,9 @@ const Profile = () => {
                 </Link>
               </li>
 
-              <li>
-                <Link
-                  to="/profile/admin/all-payments"
-                  className={`block p-2 text-lg hover:text-cyan-600 ${
-                    location.pathname === "/profile/admin/all-payments"
-                      ? "bg-sky-950 text-white"
-                      : "text-sky-900"
-                  }`}
-                >
-                  All Payments
-                </Link>
-              </li>
+
             </>
-          ) : user && user.role_id === 3 ? ( // Agent View
-            <>
-              <li>
-                <Link
-                  to="/profile/agent/all-orders"
-                  className={`block p-2 text-lg hover:text-cyan-600 ${
-                    location.pathname === "/profile/agent/all-orders"
-                      ? "bg-sky-950 text-white"
-                      : "text-sky-900"
-                  }`}
-                >
-                  Assigned Orders
-                </Link>
-              </li>
-            </>
+
           ) : (
             <li>
               <Link
@@ -230,33 +189,18 @@ const Profile = () => {
                 <Route path="admin/order-status" element={<OrderStatus />} />
                 <Route path="admin/all-products" element={<AllProducts />} />
                 <Route path="admin/all-users" element={<AllUsers />} />
-                <Route
-                  path="admin/all-messages"
-                  element={<AllContactMessages />}
-                />
+
                 <Route
                   path="admin/all-categories"
                   element={<AllCategories />}
                 />
                 <Route path="admin/all-companies" element={<AllCompanies />} />
-
-                <Route path="admin/all-payments" element={<AllPayments />} />
                 <Route
                   path="admin/all-orders/order-timeline"
                   element={<AdminOrderTimeline />}
                 />
               </>
-            ) : user && user.role_id === 3 ? ( // Agent Routes
-              <>
-                <Route
-                  path="agent/all-orders"
-                  element={<AgentOrders user={user} />}
-                />
-                 <Route
-                  path="agent/all-orders/order-timeline"
-                  element={<AgentOrderTimeline />}
-                />
-              </>
+
             ) : (
               <Route path="orders" element={<MyOrders orders={orders} />} />
             )}

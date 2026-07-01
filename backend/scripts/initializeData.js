@@ -4,8 +4,7 @@ async function insertSampleData() {
   try {
     // Insert default roles if not already present
     await Role.findOrCreate({ where: { name: 'admin' } });
-    await Role.findOrCreate({ where: { name: 'customer' } });
-    await Role.findOrCreate({ where: { name: 'agent' } });
+    await Role.findOrCreate({ where: { name: 'partner' } });
 
     // Insert Categories if not already present
     const categories = [

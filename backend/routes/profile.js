@@ -1,22 +1,14 @@
 const express = require("express");
 const { getUserProfile, getUserOrders} = require("../controllers/profileController");
-const { getAllOrders,  updateOrderStatus,  updateShippingDate, updateDeliveryDate, getAllProducts, getAllUsers, getAllMessages, getAllCategories, getAllCoupons, getAllPayments, getAllRoles, getAllCompany } = require("../controllers/adminController");
+const { getAllOrders,  updateOrderStatus,  updateShippingDate, updateDeliveryDate, getAllProducts, getAllUsers, getAllCategories, getAllRoles, getAllCompany } = require("../controllers/adminController");
 const { checkRole } = require("../middlewares/roleMiddleware");
 const crudController = require('../controllers/crudController');
-const {  getAgentIdByUserId, getAllAgents,assignAgentToOrder,  getOrdersByAgentId, verifyOrderCode } = require("../controllers/agentController");
 
 const router = express.Router();
 
 // Get user profile
 router.get('/', getUserProfile);
 
-// Agent Routes
-
-router.get("/all-agents", getAllAgents); // Fetch all agents
-router.post("/orders/assign-agent", assignAgentToOrder); // Assign agent to order
-router.get("/agent/:agentId", getOrdersByAgentId);
-
-router.post("/agent/verifycode",verifyOrderCode);
 // Get user orders
 router.get('/orders-details', getUserOrders);
 
@@ -32,19 +24,15 @@ router.get("/admin/all-products", checkRole(1), getAllProducts);
 
 router.get("/admin/all-users", checkRole(1), getAllUsers);
 
-router.get("/admin/all-messages", checkRole(1), getAllMessages);
 
 router.get("/admin/all-categories", checkRole(1), getAllCategories);
 
-router.get("/admin/all-coupons", checkRole(1), getAllCoupons);
-
-router.get("/admin/all-payments", checkRole(1), getAllPayments);
 
 router.get("/admin/all-roles", checkRole(1), getAllRoles);
 
 router.get("/admin/all-companies", checkRole(1), getAllCompany);
 
-router.get("/agentid/:userId", checkRole(1), getAgentIdByUserId);
+
 
 router.post('/admin/crud/new/:table', crudController.create); // Create
 

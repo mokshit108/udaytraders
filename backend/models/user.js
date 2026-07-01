@@ -49,11 +49,10 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = (models) => {
     // Existing associations
-    User.hasMany(models.ContactMessage, { foreignKey: 'user_id' });
+
     User.hasMany(models.Order, { foreignKey: 'user_id' });
     User.hasMany(models.Address, { foreignKey: 'user_id' });
-    // New association with Payment
-    User.hasMany(models.Payment, { foreignKey: 'user_id' });
+
     // New association with Role
     User.belongsTo(models.Role, { foreignKey: 'role_id' }); // User has a role_id foreign key
   };

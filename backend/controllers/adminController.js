@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-const { User, Product, Role, ContactMessage, Category, Coupon, Payment, Company } = require("../models");
+const { User, Product, Role, Category, Company } = require("../models");
 
 const getAllOrders = async (req, res) => {
   try {
@@ -17,19 +17,16 @@ const getAllOrders = async (req, res) => {
              p.name AS product_name,
              c.name AS company_name,
              u.username AS user,
-             pay.final_amount,
-             pay.discount_percentage,
+
              oi.quantity,
-             oi.price,
-             o.agent_id AS assignedAgentId
+             oi.price
       FROM orders o
       JOIN order_items oi ON o.id = oi.order_id
       JOIN products p ON oi.product_id = p.id
       JOIN companies c ON p.company_id = c.id
       JOIN users u ON o.user_id = u.id
       JOIN order_status s ON o.status_id = s.id
-      JOIN payments pay ON o.id = pay.o_id
-      LEFT JOIN agents a ON o.agent_id = a.id
+
     `;
 
     // Check if status is provided and modify the query
@@ -219,15 +216,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-const getAllMessages = async (req, res) => {
-  try {
-    const messages = await ContactMessage.findAll();
-    res.json({ messages });
-  } catch (err) {
-    console.error("Error in getAllMessages:", err.message);
-    res.status(500).json({ error: "Unable to fetch contact messages" });
-  }
-};
 
 const getAllCategories = async (req, res) => {
   try {
@@ -249,39 +237,6 @@ const getAllCoupons = async (req, res) => {
   }
 };
 
-const getAllPayments = async (req, res) => {
-  try {
-    const payments = await Payment.findAll({
-      include: [
-        {
-          model: User, // Ensure you import the User model
-          attributes: ['username'], // Specify the fields you want to retrieve from the User table
-        },
-      ],
-    });
-
-    // Map the payments to include user name
-    const formattedPayments = payments.map(payment => ({
-      id: payment.id,
-      userName: payment.User ? payment.User.username : null, // Get user name from associated User model
-      order_id: payment.order_id,
-      o_id: payment.o_id,
-      final_amount: payment.final_amount,
-      discount_amount: payment.discount_amount,
-      discount_percentage: payment.discount_percentage,
-      total_amount: payment.total_amount,
-      method: payment.method,
-      transaction_id: payment.transaction_id,
-      status: payment.status,
-      created_at: payment.created_at,
-    }));
-
-    res.json({ payments: formattedPayments });
-  } catch (err) {
-    console.error("Error in getAllPayments:", err.message);
-    res.status(500).json({ error: "Unable to fetch payments" });
-  }
-};
 
 const getAllRoles = async (req, res) => {
   try {
@@ -310,10 +265,9 @@ module.exports = {
   updateDeliveryDate,
   getAllProducts,
   getAllUsers,
-  getAllMessages,
   getAllCategories,
   getAllCoupons,
-  getAllPayments,
+
   getAllRoles,
   getAllCompany
 };

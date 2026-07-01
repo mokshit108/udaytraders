@@ -95,16 +95,7 @@ const MyOrders = ({ orders }) => {
           <h2 className="text-2xl lg:text-3xl font-palanquin font-bold mb-6 text-sky-950">
             My Orders
           </h2>
-          <p className="font-montserrat max-md:text-sm text-md font-medium text-black bg-white rounded-lg border-sky-700 border-solid border-2 shadow-md p-4 mb-10 transform transition-transform hover:-translate-y-1">
-            <span className="text-lg max-md:text-sm font-semibold font-montserrat text-sky-700 mr-2">
-              Note:
-            </span>
-            Provide your{" "}
-            <span className="font-lg font-semibold font-montserrat text-slate-700">
-              Order Code
-            </span>{" "}
-            to the delivery agent to receive your order.
-          </p>
+
           <div className="space-y-6">
             {sortedGroupedOrders.map(([date, transactions]) => (
               <div

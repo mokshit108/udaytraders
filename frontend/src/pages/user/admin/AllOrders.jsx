@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 const AllOrders = () => {
   const [orders, setOrders] = useState([]);
-  const [agents, setAgents] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   //const [openDropdown, setOpenDropdown] = useState(null);
@@ -15,7 +15,7 @@ const AllOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-    fetchAgents();
+
   }, []);
 
   const fetchOrders = async () => {
@@ -37,48 +37,6 @@ const AllOrders = () => {
     }
   };
 
-  const fetchAgents = async () => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/profile/all-agents`);
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setAgents(data.agents);
-    } catch (error) {
-      console.error("Error fetching agents:", error);
-      setErrorMessage("Failed to fetch agents.");
-    }
-  };
-
-  const handleAgentAssignment = async (orderId, agentId) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/profile/orders/assign-agent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, agentId }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      // Display success message from the API response
-      setSuccessMessage(data.message || "Agent assigned successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      fetchOrders();
-    } catch (error) {
-      console.error("Error assigning agent:", error);
-      // Display error message from the API response
-      setErrorMessage(error.message || "Failed to assign agent.");
-      setTimeout(() => setErrorMessage(""), 3000); // Clear error message after 3 seconds
-    }
-  };
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
@@ -165,7 +123,6 @@ const AllOrders = () => {
       if (!groupedOrders[user][orderId]) {
         groupedOrders[user][orderId] = {
           items: [],
-          assignedAgentId: order.assignedAgentId,
           status: order.status,
           ocode: order.o_code,
           createdAt: order.created_at,
@@ -230,41 +187,7 @@ const AllOrders = () => {
                     key={orderId}
                     className="shadow border rounded-lg p-4 bg-gray-50"
                   >
-                    <select
-                      className="border border-gray-300 rounded px-4 py-2"
-                      onChange={(e) =>
-                        handleAgentAssignment(orderId, e.target.value)
-                      }
-                      value={
-                        userOrders[orderId]?.items[0]?.assignedagentid || ""
-                      } // Set selected value based on assignedAgentId
-                    >
-                      {/* Display Assigned Agent option if assignedagentid exists */}
-                      {userOrders[orderId]?.items[0]?.assignedagentid ? (
-                        <option value="" disabled>
-                          Assigned Agent:{" "}
-                          {
-                            // Find the agent name based on assignedAgentId
-                            agents.find(
-                              (agent) =>
-                                agent.id ===
-                                userOrders[orderId].items[0].assignedagentid
-                            )?.name || "Unknown"
-                          }
-                        </option>
-                      ) : (
-                        <option value="" disabled>
-                          Select Agent
-                        </option>
-                      )}
 
-                      {/* Loop through agents and display them in the dropdown */}
-                      {agents.map((agent) => (
-                        <option key={agent.id} value={agent.id}>
-                          {agent.name}
-                        </option>
-                      ))}
-                    </select>
 
                     <div>
                       <p className="font-xl font-semibold font-montserrat text-gray-500">

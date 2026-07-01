@@ -5,8 +5,6 @@ import { GoogleOAuthProvider } from "@react-oauth/google"; // Import GoogleOAuth
 import Nav from "./components/nav/Nav";
 import {
   Footer,
-  PopularProducts,
-  SuperQuality,
 } from "./sections";
 import { NewArrivals, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
 import SuccessPage from "./components/SuccessPage";
@@ -23,7 +21,8 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/register-phone-number" element={<RegisterPhoneNumber />} />
             <Route path="/contact-us" element={<ContactUs />} />
-            <Route path="/new-arrivals" element={<NewArrivals />} />
+
+            <Route path="/products" element={<NewArrivals />} />
             <Route path="/login" element={<LoginCard />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -67,19 +66,31 @@ const Home = () => {
   return (
     <>
 
-      <section
-        ref={(el) => (sectionsRef.current[1] = el)}
-        className="fade-in-section padding-leftright pt-24 lg:pt-32"
-      >
-        <PopularProducts />
-      </section>
-      <section
-        ref={(el) => (sectionsRef.current[2] = el)}
-        className="fade-in-section padding-leftright"
-      >
-        <SuperQuality />
-      </section>
+      <section className="min-h-[80vh] pt-32 pb-16 px-8 bg-slate-50 flex flex-col items-center">
+        <h1 className="text-4xl md:text-6xl font-palanquin font-bold text-sky-950 mb-4 text-center">
+          Welcome to Uday Traders
+        </h1>
+        <p className="text-lg text-slate-600 font-montserrat mb-12 text-center max-w-2xl">
+          Your one-stop destination for premium products. Explore our catalog below for high-quality supplies.
+        </p>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="w-32 h-32 bg-sky-100 rounded-full mb-4 flex items-center justify-center">
+                <span className="text-sky-800 font-bold text-xl">Product {item}</span>
+              </div>
+              <h3 className="text-2xl font-bold font-palanquin mb-2">Dummy Item {item}</h3>
+              <p className="text-slate-500 text-center font-montserrat">
+                This is a placeholder description for Uday Traders dummy product {item}.
+              </p>
+              <button className="mt-6 bg-sky-700 text-white px-6 py-2 rounded hover:bg-sky-800 transition-colors">
+                View Details
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
     </>
   );
 };
