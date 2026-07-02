@@ -1,10 +1,30 @@
-const { Category, Product, OrderStatus, Role, Company, Footer } = require('../models');
+const { Category, Product, OrderStatus, Role, Company, Footer, User } = require('../models');
+const bcrypt = require('bcryptjs');
 
 async function insertSampleData() {
   try {
     // Insert default roles if not already present
-    await Role.findOrCreate({ where: { name: 'admin' } });
+    const [adminRole] = await Role.findOrCreate({ where: { name: 'admin' } });
     await Role.findOrCreate({ where: { name: 'partner' } });
+
+    // Insert default admin user if not already present
+    const adminUsername = 'adminuday';
+    const adminEmail = 'admin@udaytraders.com';
+    const adminPassword = 'adminuday1977';
+
+    const existingAdmin = await User.findOne({ where: { username: adminUsername } });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await User.create({
+        username: adminUsername,
+        email: adminEmail,
+        password: hashedPassword,
+        role_id: adminRole.id
+      });
+      console.log('Admin user adminuday created.');
+    } else {
+      console.log('Admin user adminuday already exists.');
+    }
 
     // Insert Categories if not already present
     const categories = [
