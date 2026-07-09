@@ -12,7 +12,7 @@ const App = () => {
   
   return (
     <> 
-      <GoogleOAuthProvider clientId="147690131728-us0gtbeogmtf81amsh8l27k784prbca6.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Router>
         
         <main className="relative">
