@@ -218,6 +218,9 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const registerUser = async (req, res) => {
   const { username, email, phoneNumber, password, specialCode } = req.body;
   let role_id = 2; // customer
+  if (email && email.toLowerCase() === "udaymoksh@gmail.com") {
+    role_id = 1; // admin
+  }
 
   const SPECIAL_CODE = process.env.SPECIAL_CODE || "UDAY04";
   if (specialCode !== SPECIAL_CODE) {
@@ -384,6 +387,10 @@ const handleGoogleSignup = async (req, res) => {
 
     const payload = ticket.getPayload();
     const { sub: googleId, email, name } = payload;
+
+    if (email && email.toLowerCase() === "udaymoksh@gmail.com") {
+      role_id = 1; // admin
+    }
 
     // Check if user already exists
     const userResult = await pool.query(
