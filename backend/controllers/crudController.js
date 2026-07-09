@@ -45,10 +45,82 @@ const crudController = {
       req.body.category_id = category.id; // Update with role ID if role_name is provided
       req.body.company_id = company.id;
       const newRecord = await model.create(req.body);
+
+      // Save to products.json if we just created a Product
+      if (table.toLowerCase() === "product") {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const filePath = path.join(__dirname, '../products.json');
+          
+          let productsList = [];
+          if (fs.existsSync(filePath)) {
+            const rawData = fs.readFileSync(filePath, 'utf8');
+            try {
+              productsList = JSON.parse(rawData);
+            } catch (jsonErr) {
+              productsList = [];
+            }
+          }
+          
+          const productData = {
+            name: newRecord.name,
+            description: newRecord.description,
+            price: Number(newRecord.price),
+            stock: Number(newRecord.stock),
+            category_id: Number(newRecord.category_id),
+            img_url: newRecord.img_url,
+            company_id: Number(newRecord.company_id),
+            is_popular: Number(newRecord.is_popular || 0)
+          };
+          
+          productsList.push(productData);
+          fs.writeFileSync(filePath, JSON.stringify(productsList, null, 2), 'utf8');
+        } catch (fsErr) {
+          console.error("Failed to write product to JSON file:", fsErr);
+        }
+      }
+
       return res.status(201).json(newRecord);
     }
     
       const newRecord = await model.create(req.body);
+
+      // Save to products.json if we just created a Product
+      if (table.toLowerCase() === "product") {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const filePath = path.join(__dirname, '../products.json');
+          
+          let productsList = [];
+          if (fs.existsSync(filePath)) {
+            const rawData = fs.readFileSync(filePath, 'utf8');
+            try {
+              productsList = JSON.parse(rawData);
+            } catch (jsonErr) {
+              productsList = [];
+            }
+          }
+          
+          const productData = {
+            name: newRecord.name,
+            description: newRecord.description,
+            price: Number(newRecord.price),
+            stock: Number(newRecord.stock),
+            category_id: Number(newRecord.category_id),
+            img_url: newRecord.img_url,
+            company_id: Number(newRecord.company_id),
+            is_popular: Number(newRecord.is_popular || 0)
+          };
+          
+          productsList.push(productData);
+          fs.writeFileSync(filePath, JSON.stringify(productsList, null, 2), 'utf8');
+        } catch (fsErr) {
+          console.error("Failed to write product to JSON file:", fsErr);
+        }
+      }
+
       return res.status(201).json(newRecord);
     } catch (error) {
       return res.status(500).json({ message: error.message });
