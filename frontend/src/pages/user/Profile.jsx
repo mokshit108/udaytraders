@@ -11,6 +11,7 @@ import AllUsers from "./admin/AllUsers";
 import AllCategories from "./admin/AllCategories";
 import AllCompanies from "./admin/AllCompanies";
 import OrderStatus from "./admin/OrderStatus"; // Import the OrderStatus component
+import AdminOrderTimeline from "./admin/AdminOrderTimeline";
 
 const Profile = () => {
   const location = useLocation();
