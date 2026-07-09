@@ -12,7 +12,7 @@ const App = () => {
   
   return (
     <> 
-      <GoogleOAuthProvider clientId="1001498681170-m15bo7nppgv2i7p9iifps86i47o3hhgn.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId="147690131728-us0gtbeogmtf81amsh8l27k784prbca6.apps.googleusercontent.com">
       <Router>
         
         <main className="relative">
