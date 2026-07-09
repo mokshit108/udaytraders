@@ -30,7 +30,8 @@ const corsOptions = {
     'https://www.onestopbath.in', 
     'https://onestopbath.in/',
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'https://udaytraders.onrender.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
