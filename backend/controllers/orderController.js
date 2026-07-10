@@ -11,62 +11,25 @@ const generateOrderCode = () => {
 };
 
 const createOrder = async (req, res) => {
-  const { checkoutFormDetails, orderDetails, userId } = req.body;
-
-  // Validation
+  const { orderDetails, userId } = req.body;
 
   try {
-
     // Start a transaction
     await pool.query('BEGIN');
 
-    // Check if the address already exists
-    const existingAddressResult = await pool.query(
-      `SELECT id FROM addresses WHERE user_id = $1`,
-      [userId]
-    );
-
-    let addressId;
-
-    if (existingAddressResult.rows.length > 0) {
-      addressId = existingAddressResult.rows[0].id;
-    } else {
-      // Insert new address
-      const addressResult = await pool.query(
-        `INSERT INTO addresses (
-          user_id, first_name, last_name, country,
-          street_address1, street_address2, city,
-          station, phone, pincode, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
-        [
-          userId,
-          checkoutFormDetails.firstName,
-          checkoutFormDetails.lastName,
-          checkoutFormDetails.country,
-          checkoutFormDetails.streetAddress1,
-          checkoutFormDetails.streetAddress2,
-          checkoutFormDetails.city,
-          checkoutFormDetails.station,
-          checkoutFormDetails.phone,
-          checkoutFormDetails.pincode
-        ]
-      );
-      addressId = addressResult.rows[0].id;
-    }
-
     const currentDate = new Date();
-    const shippingDate = addDays(currentDate, 4); // Shipping date is 2 days from now
-    const deliveryDate = addDays(currentDate, 4); // Delivery date is 4 days from now
+    const shippingDate = addDays(currentDate, 4);
+    const deliveryDate = addDays(currentDate, 4);
 
     // Generate order code
     const orderCode = generateOrderCode();
 
-    // Insert into orders table
+    // Insert into orders table (no address required)
     const orderResult = await pool.query(
       `INSERT INTO orders
       (user_id, address_id, status_id, created_at, shipping_date, delivery_date, order_code)
       VALUES ($1, $2, $3, NOW(), $4, $5, $6) RETURNING id, order_code`,
-      [userId, addressId, 1, shippingDate, deliveryDate, orderCode] // Assuming 1 is the initial status_id
+      [userId, null, 1, shippingDate, deliveryDate, orderCode]
     );
 
     const orderId = orderResult.rows[0].id;
@@ -97,6 +60,7 @@ const createOrder = async (req, res) => {
     return res.status(500).json({ error: 'Error creating order' });
   }
 };
+
 
 const getUserDetails = async (req, res) => {
   const { userId } = req.params;

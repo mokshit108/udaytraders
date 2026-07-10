@@ -5,38 +5,43 @@ const getAllOrders = async (req, res) => {
   try {
     const { status } = req.params;
 
-    // Base query
+    // Base query — returns one row per order_item so admin sees every product
+    // final_amount is the total for the entire order (window sum)
     let query = `
-      SELECT o.id AS order_id,
-             o.order_code AS o_code,
+      SELECT o.id          AS order_id,
+             o.order_code  AS o_code,
              o.created_at,
              o.shipping_date,
              o.delivery_date,
-             s.status AS status,
-             p.img_url AS product_image,
-             p.name AS product_name,
-             c.name AS company_name,
-             u.username AS user,
-
+             s.status      AS status,
+             p.id          AS product_id,
+             p.img_url     AS product_image,
+             p.name        AS product_name,
+             c.name        AS company_name,
+             u.username    AS user,
+             u.email       AS user_email,
+             u.role_id     AS user_role_id,
+             r.name        AS user_role,
              oi.quantity,
-             oi.price
-      FROM orders o
-      JOIN order_items oi ON o.id = oi.order_id
-      JOIN products p ON oi.product_id = p.id
-      JOIN companies c ON p.company_id = c.id
-      JOIN users u ON o.user_id = u.id
-      JOIN order_status s ON o.status_id = s.id
-
+             oi.price,
+             SUM(oi.price * oi.quantity)
+               OVER (PARTITION BY o.id) AS final_amount
+      FROM   orders o
+      JOIN   order_items  oi ON o.id          = oi.order_id
+      JOIN   products     p  ON oi.product_id = p.id
+      JOIN   companies    c  ON p.company_id  = c.id
+      JOIN   users        u  ON o.user_id     = u.id
+      JOIN   roles        r  ON u.role_id     = r.id
+      JOIN   order_status s  ON o.status_id   = s.id
     `;
 
-    // Check if status is provided and modify the query
+    // Optional status filter
     if (status) {
-      query += ` WHERE s.status = $1`; // Use parameterized query to prevent SQL injection
+      query += ` WHERE s.status = $1`;
     }
 
     query += ` ORDER BY o.created_at DESC`;
 
-    // Execute the query with parameters
     const ordersResult = await pool.query(query, status ? [status] : []);
 
     res.json({ orders: ordersResult.rows });
@@ -45,6 +50,7 @@ const getAllOrders = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 const updateOrderStatus = async (req, res) => {
   const { orderId, status } = req.body;

@@ -9,8 +9,10 @@ import {
 import { navLinks } from "../../constants";
 
 import { Link } from "react-router-dom"; // Import Link
+import { useCart } from "../../context/CartContext";
 
 const NavLarge = ({ location, username, logout }) => {
+  const { cart } = useCart();
 
   return (
     <ul className="hidden md:flex flex-1 justify-center items-center gap-8">
@@ -56,6 +58,20 @@ const NavLarge = ({ location, username, logout }) => {
                 />
                 <span className="ml-4 hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-8 transform -translate-x-1/2 whitespace-nowrap">
                   Logout
+                </span>
+              </Link>
+              <Link to="/cart" className="flex items-end group relative">
+                <FontAwesomeIcon
+                  icon={faShoppingCart}
+                  className="text-xl hover:text-cyan-600 hover:underline cursor-pointer"
+                />
+                {cart.length > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </span>
+                )}
+                <span className="ml-4 hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-8 transform -translate-x-1/2 whitespace-nowrap">
+                  Cart
                 </span>
               </Link>
               <Link to="/profile" className="flex items-end group">

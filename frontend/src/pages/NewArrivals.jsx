@@ -5,6 +5,7 @@ import "rc-slider/assets/index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faCheck, faFilter, faSort, faSortAmountDown, faSortAmountUp, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { useCart } from "../context/CartContext";
 
 const NewArrivals = () => {
 
@@ -19,30 +20,7 @@ const NewArrivals = () => {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState("none"); // 'none', 'lowToHigh', 'highToLow'
-  const [cart, setCart] = useState([]);
-  const [showCart, setShowCart] = useState(false);
-  const [orderConfirmed, setOrderConfirmed] = useState(false);
-
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const confirmOrder = () => {
-    setOrderConfirmed(true);
-    setTimeout(() => {
-      setOrderConfirmed(false);
-      setCart([]);
-      setShowCart(false);
-    }, 3000);
-  };
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProductsAndCategories = async () => {
@@ -497,67 +475,6 @@ const NewArrivals = () => {
             )}
           </div>
         </div>
-        
-        {cart.length > 0 && (
-          <button
-            onClick={() => setShowCart(true)}
-            className="fixed bottom-6 right-6 bg-sky-900 text-white px-6 py-4 rounded-full shadow-2xl z-40 hover:bg-sky-800 transition transform hover:scale-105"
-          >
-            <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
-            <span className="font-bold">{cart.reduce((sum, item) => sum + item.quantity, 0)} Items</span>
-          </button>
-        )}
-
-        {showCart && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative max-h-[80vh] overflow-y-auto font-montserrat">
-              <button
-                onClick={() => { setShowCart(false); setOrderConfirmed(false); }}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
-              >
-                <FontAwesomeIcon icon={faTimes} className="text-xl" />
-              </button>
-              <h2 className="text-2xl font-bold font-palanquin mb-6 text-sky-950">Your Cart</h2>
-              
-              {cart.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Your cart is empty.</p>
-              ) : (
-                <div className="space-y-4 mb-6">
-                  {cart.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center border-b pb-2">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-gray-800">{item.name}</span>
-                        <span className="text-xs text-gray-500">Qty: {item.quantity}</span>
-                      </div>
-                      <span className="font-bold text-sky-900">₹{item.price * item.quantity}</span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between items-center pt-2 font-bold text-lg border-t-2 mt-4 border-gray-200">
-                    <span>Total:</span>
-                    <span>₹{cart.reduce((sum, item) => sum + item.price * item.quantity, 0)}</span>
-                  </div>
-                </div>
-              )}
-
-              {orderConfirmed ? (
-                <div className="bg-green-100 text-green-800 p-4 rounded-lg text-center font-bold text-lg animate-pulse">
-                  <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                  Your order is confirmed!
-                </div>
-              ) : (
-                cart.length > 0 && (
-                  <button
-                    onClick={confirmOrder}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-green-700 transition"
-                  >
-                    Confirm Order
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-        )}
-
       </section>
     </>
   );

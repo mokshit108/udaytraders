@@ -1,4 +1,5 @@
 import NewArrivals from "./NewArrivals";
+import Cart from "./Cart";
 import ContactUs from "./ContactUs";
 import LoginSignupCard from "./LoginSignupCard";
 import LoginCard from "./LoginCard";
@@ -12,6 +13,7 @@ import  RegisterPhoneNumber from "./RegisterPhoneNumber";
 
 export {
     NewArrivals,
+    Cart,
     ContactUs,
     LoginSignupCard,
     LoginCard,

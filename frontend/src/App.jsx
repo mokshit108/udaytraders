@@ -6,12 +6,13 @@ import Nav from "./components/nav/Nav";
 import {
   Footer,
 } from "./sections";
-import { NewArrivals, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
+import { CartProvider } from "./context/CartContext";
+import { NewArrivals, Cart, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
 import SuccessPage from "./components/SuccessPage";
 const App = () => {
   
   return (
-    <> 
+    <CartProvider>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Router>
         
@@ -23,6 +24,7 @@ const App = () => {
             <Route path="/contact-us" element={<ContactUs />} />
 
             <Route path="/products" element={<NewArrivals />} />
+            <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<LoginCard />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -37,7 +39,7 @@ const App = () => {
         </main>
       </Router>
       </GoogleOAuthProvider>
-    </>
+    </CartProvider>
   );
 };
 
