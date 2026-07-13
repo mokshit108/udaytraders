@@ -22,6 +22,14 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(bodyParser.json());
+
+// Set headers for Google Sign-In (FedCM / COOP)
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+});
+
 const corsOptions = {
   origin: [
     'https://onestopbathsolution.onrender.com', 

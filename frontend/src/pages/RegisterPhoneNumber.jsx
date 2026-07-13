@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheckCircle, faTimesCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const RegisterPhoneNumber = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -40,6 +42,7 @@ const RegisterPhoneNumber = () => {
       setTimeout(() => navigate("/"), 3000); // Redirect to home page after 3 seconds
     } catch (error) {
       setErrorMessage(error.message);
+      setTimeout(() => setErrorMessage(""), 3000);
       setSuccessMessage("");
     }
   };
@@ -49,16 +52,32 @@ const RegisterPhoneNumber = () => {
 
     <div className="flex items-center justify-center min-h-screen padding-topbottom">
       <div className="w-full max-w-md p-6 bg-white border border-gray-300 shadow-md rounded-lg">
+      {successMessage && (
+        <div className="fixed top-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+          <FontAwesomeIcon icon={faCheckCircle} className="mr-3 text-2xl text-green-500" />
+          <p className="flex-1 font-semibold">{successMessage}</p>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage("")}
+            className="ml-4 text-green-600 hover:text-green-800 focus:outline-none"
+          >
+            <FontAwesomeIcon icon={faTimes} className="text-xl" />
+          </button>
+        </div>
+      )}
       {errorMessage && (
-      <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-        <p>{errorMessage}</p>
-      </div>
-    )}
-    {successMessage && (
-      <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
-        <p>{successMessage}</p>
-      </div>
-    )}
+        <div className="fixed top-5 right-5 z-50 flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+          <FontAwesomeIcon icon={faTimesCircle} className="mr-3 text-2xl text-red-500" />
+          <p className="flex-1 font-semibold">{errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => setErrorMessage("")}
+            className="ml-4 text-red-600 hover:text-red-800 focus:outline-none"
+          >
+            <FontAwesomeIcon icon={faTimes} className="text-xl" />
+          </button>
+        </div>
+      )}
         <h2 className="text-2xl font-palanquin font-bold text-center text-sky-700 mb-4">
           Complete Your Details
         </h2>

@@ -7,6 +7,7 @@ import {
   faCheckCircle,
   faTimesCircle,
   faSpinner,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 
 const LoginSignupCard = () => {
@@ -157,7 +158,7 @@ const LoginSignupCard = () => {
       setErrorMessage(error.message); // Set error message
         setTimeout(() => {
           setErrorMessage("");
-        }, 4000);
+        }, 3000);
       setSuccessMessage(""); // Clear any previous success message
     } finally {
       const elapsedTime = Date.now() - startTime;
@@ -199,15 +200,31 @@ const LoginSignupCard = () => {
         ) : (
           <>
             {successMessage && (
-              <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
-                <p>{successMessage}</p>
+              <div className="fixed bottom-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+                <FontAwesomeIcon icon={faCheckCircle} className="mr-3 text-2xl text-green-500" />
+                <p className="flex-1 font-semibold">{successMessage}</p>
+                <button
+                  type="button"
+                  onClick={() => setSuccessMessage("")}
+                  className="ml-4 text-green-600 hover:text-green-800 focus:outline-none"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="text-xl" />
+                </button>
               </div>
             )}
              {errorMessage && (
-                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-                  <p>{errorMessage}</p>
-                </div>
-              )}
+              <div className="fixed bottom-5 right-5 z-50 flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+                <FontAwesomeIcon icon={faTimesCircle} className="mr-3 text-2xl text-red-500" />
+                <p className="flex-1 font-semibold">{errorMessage}</p>
+                <button
+                  type="button"
+                  onClick={() => setErrorMessage("")}
+                  className="ml-4 text-red-600 hover:text-red-800 focus:outline-none"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="text-xl" />
+                </button>
+              </div>
+            )}
             <div className="flex justify-evenly mb-6 bg-sky-100">
               <button
                 className={`px-4 py-2 ${
