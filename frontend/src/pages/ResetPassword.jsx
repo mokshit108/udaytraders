@@ -95,7 +95,7 @@ const ResetPassword = () => {
       <div className="max-w-md w-full bg-white border border-gray-300 shadow-lg rounded-lg p-6 mt-16">
        
         {successMessage && (
-          <div className="fixed top-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+          <div className="fixed bottom-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
             <FaCheckCircle className="mr-3 text-2xl text-green-500" />
             <p className="flex-1 font-semibold">{successMessage}</p>
             <button
@@ -108,7 +108,7 @@ const ResetPassword = () => {
           </div>
         )}
         {errorMessage && (
-          <div className="fixed top-5 right-5 z-50 flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+          <div className="fixed bottom-5 right-5 z-50 flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
             <FaTimesCircle className="mr-3 text-2xl text-red-500" />
             <p className="flex-1 font-semibold">{errorMessage}</p>
             <button

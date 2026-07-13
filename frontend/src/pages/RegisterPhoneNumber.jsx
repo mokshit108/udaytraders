@@ -53,7 +53,7 @@ const RegisterPhoneNumber = () => {
     <div className="flex items-center justify-center min-h-screen padding-topbottom">
       <div className="w-full max-w-md p-6 bg-white border border-gray-300 shadow-md rounded-lg">
       {successMessage && (
-        <div className="fixed top-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
           <FontAwesomeIcon icon={faCheckCircle} className="mr-3 text-2xl text-green-500" />
           <p className="flex-1 font-semibold">{successMessage}</p>
           <button
@@ -66,7 +66,7 @@ const RegisterPhoneNumber = () => {
         </div>
       )}
       {errorMessage && (
-        <div className="fixed top-5 right-5 z-50 flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
           <FontAwesomeIcon icon={faTimesCircle} className="mr-3 text-2xl text-red-500" />
           <p className="flex-1 font-semibold">{errorMessage}</p>
           <button
