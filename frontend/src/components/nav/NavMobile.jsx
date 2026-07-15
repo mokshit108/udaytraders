@@ -98,24 +98,22 @@ const NavMobile = ({
       >
         <ul className="flex flex-col items-center mt-3 mb-2">
           {navLinks.map((item) => (
-            (item.label !== "Products" || username) && (
-              <li
-                key={item.label}
-                className="w-full text-center border-gray-200 border-b"
+            <li
+              key={item.label}
+              className="w-full text-center border-gray-200 border-b"
+            >
+              <Link
+                to={item.href}
+                className={`block py-3 text-xl transition-colors ${
+                  location.pathname === item.href 
+                    ? "text-cyan-400 underline underline-offset-8 decoration-2 decoration-cyan-400 w-fit mx-auto" 
+                    : "text-white hover:text-cyan-400 underline-animation"
+                }`}
+                onClick={() => toggleMenu()}
               >
-                <Link
-                  to={item.href}
-                  className={`block py-3 text-xl transition-colors ${
-                    location.pathname === item.href 
-                      ? "text-cyan-400 underline underline-offset-8 decoration-2 decoration-cyan-400 w-fit mx-auto" 
-                      : "text-white hover:text-cyan-400 underline-animation"
-                  }`}
-                  onClick={() => toggleMenu()}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            )
+                {item.label}
+              </Link>
+            </li>
           ))}
 
           {roleid == 1 ? ( // Check if user exists and role_id is 1

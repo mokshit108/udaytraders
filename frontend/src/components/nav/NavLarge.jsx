@@ -28,20 +28,18 @@ const NavLarge = ({ location, username, logout }) => {
       {/* Navigation Links */}
       <div className="flex-1 flex justify-center items-center md:gap-8 lg:gap-16">
         {navLinks.map((item) => (
-          (item.label !== "Products" || username) && (
-            <li key={item.label}>
-              <Link
-                to={item.href}
-                className={`block py-4 font-palanquin text-xl text-start transition-colors ${
-                  location.pathname === item.href 
-                    ? "text-cyan-400 underline underline-offset-8 decoration-2 decoration-cyan-400" 
-                    : "text-white hover:text-cyan-400 underline-animation"
-                }`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          )
+          <li key={item.label}>
+            <Link
+              to={item.href}
+              className={`block py-4 font-palanquin text-xl text-start transition-colors ${
+                location.pathname === item.href 
+                  ? "text-cyan-400 underline underline-offset-8 decoration-2 decoration-cyan-400" 
+                  : "text-white hover:text-cyan-400 underline-animation"
+              }`}
+            >
+              {item.label}
+            </Link>
+          </li>
         ))}
       </div>
 

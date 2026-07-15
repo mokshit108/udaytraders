@@ -304,6 +304,9 @@ const LoginCard = () => {
           </div>
         ) : (
           <>
+            <div className="bg-sky-50 text-sky-800 p-3.5 rounded-lg mb-6 text-center text-sm font-semibold border border-sky-100 font-montserrat shadow-sm">
+              Note: Ask special code on this number <span className="font-bold underline text-sky-900">8104689015</span>
+            </div>
             {successMessage && (
               <div className="fixed bottom-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
                 <FontAwesomeIcon icon={faCheckCircle} className="mr-3 text-2xl text-green-500" />

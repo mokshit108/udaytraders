@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-
+import { Link } from "react-router-dom";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -160,6 +160,27 @@ const NewArrivals = () => {
       borderColor: "white",
     },
   ];
+
+  const username = sessionStorage.getItem("username");
+
+  if (!username) {
+    return (
+      <section className="flex flex-col items-center justify-center min-h-screen pt-28 pb-20 px-4 bg-gray-50/30">
+        <div className="bg-white border border-gray-100 p-8 md:p-12 rounded-3xl shadow-2xl shadow-sky-900/5 text-center max-w-lg w-full transform transition-all hover:scale-[1.02]">
+          <div className="bg-sky-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FontAwesomeIcon icon={faShoppingCart} className="text-4xl text-sky-700" />
+          </div>
+          <h4 className="text-2xl md:text-3xl font-bold font-palanquin text-slate-800 mb-4">Login Required</h4>
+          <p className="text-slate-600 mb-8 font-montserrat text-sm md:text-base leading-relaxed">
+            You need to be logged in to view our exclusive B2B product catalog, explore new arrivals, and view pricing.
+          </p>
+          <Link to="/login" className="inline-block w-full sm:w-auto bg-sky-700 text-white font-semibold py-3 px-10 rounded-xl hover:bg-sky-800 transition-all shadow-md hover:shadow-lg active:scale-95">
+            Login to Continue
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
