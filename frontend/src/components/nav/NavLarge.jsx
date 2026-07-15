@@ -32,8 +32,10 @@ const NavLarge = ({ location, username, logout }) => {
             <li key={item.label}>
               <Link
                 to={item.href}
-                className={`block py-4 font-palanquin text-xl text-start text-white hover:text-cyan-400 underline-animation ${
-                  location.pathname === item.href ? "text-sky-400" : ""
+                className={`block py-4 font-palanquin text-xl text-start transition-colors ${
+                  location.pathname === item.href 
+                    ? "text-cyan-400 underline underline-offset-8 decoration-2 decoration-cyan-400" 
+                    : "text-white hover:text-cyan-400 underline-animation"
                 }`}
               >
                 {item.label}
@@ -44,7 +46,7 @@ const NavLarge = ({ location, username, logout }) => {
       </div>
 
       {/* Sign In, Logout, and Cart (Desktop View) */}
-      <li className="flex items-center gap-4 relative ml-auto">
+      <li className="flex items-center gap-4 relative ml-auto mr-4 lg:mr-10">
         <div className="relative">
           {username ? (
             <div className="flex items-center gap-4">

@@ -105,8 +105,10 @@ const NavMobile = ({
               >
                 <Link
                   to={item.href}
-                  className={`block py-3 text-xl text-white hover:text-cyan-400 underline-animation ${
-                    location.pathname === item.href ? "text-sky-400" : ""
+                  className={`block py-3 text-xl transition-colors ${
+                    location.pathname === item.href 
+                      ? "text-cyan-400 underline underline-offset-8 decoration-2 decoration-cyan-400 w-fit mx-auto" 
+                      : "text-white hover:text-cyan-400 underline-animation"
                   }`}
                   onClick={() => toggleMenu()}
                 >
@@ -195,7 +197,7 @@ const NavMobile = ({
 
             </>
 
-          ) : (
+          ) : username ? (
             <li className="w-full text-center border-gray-200 border-b">
               <Link
                 to="/profile/orders"
@@ -206,7 +208,7 @@ const NavMobile = ({
                 My Orders
               </Link>
             </li>
-          )}
+          ) : null}
         </ul>
       </nav>
     </>

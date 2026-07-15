@@ -429,39 +429,41 @@ const NewArrivals = () => {
                 const isLongName = product.name.length > 20;
 
                 return (
-                  <div key={index} className="border border-gray-300 flex flex-col shadow-sm rounded-md overflow-hidden">
+                  <div key={index} className="border border-gray-200 flex flex-col bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden group">
                     {/* Product image */}
-                    <div className="min-h-[150px] relative">
+                    <div className="w-full aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
                       <img
                         src={product.img_url}
                         alt={product.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
 
                     {/* Product details */}
-                    <div className="p-2 flex flex-col flex-grow bg-white">
-                      <h5 className={`${isLongName ? "text-xs" : "text-sm"} font-semibold line-clamp-2 min-h-[2.5em]`}>
+                    <div className="p-3 sm:p-4 flex flex-col flex-grow bg-white">
+                      <h5 className={`${isLongName ? "text-xs sm:text-sm" : "text-sm sm:text-base"} font-semibold line-clamp-2 min-h-[2.5em] text-slate-800`}>
                         {product.name}
                       </h5>
-                      <div className="flex justify-between items-center mt-1">
-                        <p className="text-gray-600 text-xs">{product.company}</p>
-                        <p className="text-sky-900 font-bold text-sm">
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-slate-500 text-xs sm:text-sm font-medium">{product.company}</p>
+                        <p className="text-sky-900 font-bold text-sm sm:text-base">
                           ₹{product.price}
                         </p>
                       </div>
-                      {!product.stock ? (
-                        <p className="text-red-500 font-semibold text-xs mt-1">
-                          Restocking soon
-                        </p>
-                      ) : (
-                        <button
-                          onClick={() => addToCart(product)}
-                          className="mt-3 w-full bg-sky-700 text-white py-2 rounded text-sm font-semibold hover:bg-sky-800 transition"
-                        >
-                          Add to Cart
-                        </button>
-                      )}
+                      <div className="mt-auto pt-3">
+                        {!product.stock ? (
+                          <p className="text-red-500 font-semibold text-xs sm:text-sm text-center py-2">
+                            Restocking soon
+                          </p>
+                        ) : (
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm"
+                          >
+                            Add to Cart
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
