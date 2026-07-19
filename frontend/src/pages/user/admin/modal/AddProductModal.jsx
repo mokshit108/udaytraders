@@ -27,6 +27,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
   const [productImageUrl, setProductImageUrl]   = useState(""); // final Cloudinary URL
   const [productCompany, setProductCompany]     = useState("");
   const [productIsPopular, setProductIsPopular] = useState(false);
+  const [productSeries, setProductSeries]       = useState("");
 
   const [imageFile, setImageFile]         = useState(null);   // selected File object
   const [imagePreview, setImagePreview]   = useState("");     // local blob URL for preview
@@ -124,6 +125,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     setProductImageUrl("");
     setProductCompany("");
     setProductIsPopular(false);
+    setProductSeries("");
     setImageFile(null);
     setImagePreview("");
     setUploadProgress(0);
@@ -174,6 +176,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
           img_url:       finalUrl,
           company_name:  productCompany,
           is_popular:    productIsPopular ? 1 : 0,
+          series:        productSeries,
         }),
       });
 
@@ -405,6 +408,21 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
                   <option key={comp.id} value={comp.name}>{comp.name}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Series */}
+            <div className="apm-field apm-field--full">
+              <label className="apm-label" htmlFor="apm-series">
+                <FontAwesomeIcon icon={faLayerGroup} /> Series
+              </label>
+              <input
+                type="text"
+                id="apm-series"
+                value={productSeries}
+                onChange={(e) => setProductSeries(e.target.value)}
+                className="apm-input"
+                placeholder="e.g. Gold, Normal, Prime (optional)"
+              />
             </div>
 
             {/* Is Popular toggle */}

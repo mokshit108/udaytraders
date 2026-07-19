@@ -71,7 +71,8 @@ const crudController = {
             category_id: Number(newRecord.category_id),
             img_url: newRecord.img_url,
             company_id: Number(newRecord.company_id),
-            is_popular: Number(newRecord.is_popular || 0)
+            is_popular: Number(newRecord.is_popular || 0),
+            series: newRecord.series || null
           };
           
           productsList.push(productData);
@@ -111,7 +112,8 @@ const crudController = {
             category_id: Number(newRecord.category_id),
             img_url: newRecord.img_url,
             company_id: Number(newRecord.company_id),
-            is_popular: Number(newRecord.is_popular || 0)
+            is_popular: Number(newRecord.is_popular || 0),
+            series: newRecord.series || null
           };
           
           productsList.push(productData);
