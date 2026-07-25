@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, Fragment } from "react";
 import { Link } from "react-router-dom";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
@@ -19,7 +19,8 @@ const NewArrivals = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortOrder, setSortOrder] = useState("none"); // 'none', 'lowToHigh', 'highToLow'
+  const [sortOrder, setSortOrder] = useState("none");
+  const [visibleCount, setVisibleCount] = useState(30);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -148,6 +149,17 @@ const NewArrivals = () => {
     return 0; // No sorting
   });
 
+  const visibleProducts = sortedProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedProducts.length;
+
+  const handleShowMore = () => {
+    setVisibleCount((prev) => prev + 30);
+  };
+
+  useEffect(() => {
+    setVisibleCount(30);
+  }, [priceRange, selectedCompany, selectedCategory, inStockOnly, sortOrder]);
+
   const sliderStyle = {
     width: "100%",
   };
@@ -198,7 +210,7 @@ const NewArrivals = () => {
         <div className="md:hidden flex justify-center my-4">
           <button
             onClick={toggleFilters}
-            className="flex items-center bg-sky-950 text-white px-4 py-2 rounded-md"
+            className="flex items-center bg-sky-950 text-white px-5 py-2.5 rounded-lg text-sm font-medium"
           >
             <FontAwesomeIcon icon={faFilter} className="mr-2" />
             {showFilters ? "Hide Filters" : "Show Filters"}
@@ -207,18 +219,21 @@ const NewArrivals = () => {
 
         <div className="flex flex-wrap mt-4 relative">
           {/* Filters Section - Hidden by default on mobile */}
-          <div className={`w-full md:w-[30%] md:block ${showFilters ? 'block' : 'hidden'} p-4 md:p-8 font-montserrat bg-white md:bg-transparent z-10 ${showFilters ? 'fixed md:static inset-0 overflow-y-auto pt-16' : ''}`}>
-            {/* Close button for mobile filter overlay */}
+          <div className={`w-full md:w-[30%] md:block ${showFilters ? 'block' : 'hidden'} font-montserrat md:bg-transparent ${showFilters ? 'fixed md:static inset-0 z-50 overflow-y-auto bg-white' : ''}`}>
+            {/* Mobile filter header */}
             {showFilters && (
-              <div className="md:hidden absolute top-4 right-4">
+              <div className="md:hidden sticky top-0 z-10 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between">
+                <h4 className="text-xl font-bold text-sky-950">Filters</h4>
                 <button
                   onClick={toggleFilters}
-                  className="text-sky-950 p-2 rounded-full bg-gray-100"
+                  className="text-gray-500 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-full transition"
                 >
-                  <FontAwesomeIcon icon={faTimes} />
+                  <FontAwesomeIcon icon={faTimes} className="text-xl" />
                 </button>
               </div>
             )}
+
+            <div className="p-5 md:p-8 pb-24 md:pb-8 text-sm md:text-base">
 
             {/* Shop by Price */}
             <div className="mb-8">
@@ -278,7 +293,7 @@ const NewArrivals = () => {
                     onChange={() => handleSortChange("none")}
                     className="mr-2 h-5 w-5"
                   />
-                  <label htmlFor="sort-none" className="flex items-center">
+                  <label htmlFor="sort-none" className="flex items-center text-sm md:text-base">
                     <FontAwesomeIcon icon={faSort} className="mr-2" />
                     No Sorting
                   </label>
@@ -292,7 +307,7 @@ const NewArrivals = () => {
                     onChange={() => handleSortChange("lowToHigh")}
                     className="mr-2 h-5 w-5"
                   />
-                  <label htmlFor="sort-low-to-high" className="flex items-center">
+                  <label htmlFor="sort-low-to-high" className="flex items-center text-sm md:text-base">
                     <FontAwesomeIcon icon={faSortAmountUp} className="mr-2" />
                     Price: Low to High
                   </label>
@@ -306,7 +321,7 @@ const NewArrivals = () => {
                     onChange={() => handleSortChange("highToLow")}
                     className="mr-2 h-5 w-5"
                   />
-                  <label htmlFor="sort-high-to-low" className="flex items-center">
+                  <label htmlFor="sort-high-to-low" className="flex items-center text-sm md:text-base">
                     <FontAwesomeIcon icon={faSortAmountDown} className="mr-2" />
                     Price: High to Low
                   </label>
@@ -332,7 +347,7 @@ const NewArrivals = () => {
                       onChange={() => handleCategoryChange(category.id)}
                       className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
                     />
-                    <label htmlFor={`category-${category.id}`}>
+                    <label htmlFor={`category-${category.id}`} className="text-sm md:text-base">
                       {category.name}
                     </label>
                     <FontAwesomeIcon
@@ -375,7 +390,7 @@ const NewArrivals = () => {
                       onChange={() => handleCompanyChange(company.id)}
                       className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
                     />
-                    <label htmlFor={`company-${index}`}>{company.name}</label>
+                    <label htmlFor={`company-${index}`} className="text-sm md:text-base">{company.name}</label>
                   </div>
                 ))}
               </div>
@@ -402,7 +417,7 @@ const NewArrivals = () => {
                 onChange={handleInStockChange}
                 className="mr-2 h-5 w-5"
               />
-              <label htmlFor="inStockOnly">In Stock Only</label>
+              <label htmlFor="inStockOnly" className="text-sm md:text-base">In Stock Only</label>
             </div>
 
             {/* Clear All Filters Button */}
@@ -414,24 +429,25 @@ const NewArrivals = () => {
               priceRange[1] !== 10000) && (
               <div
                 onClick={clearAllFilters}
-                className="px-4 py-2 bg-sky-950 hover:bg-sky-700 text-white rounded-md cursor-pointer flex items-center justify-center"
+                className="px-4 py-2.5 bg-sky-950 hover:bg-sky-700 text-white rounded-md cursor-pointer flex items-center justify-center text-sm md:text-base font-medium"
               >
-                <FontAwesomeIcon icon={faTimes} className="h-4 w-4 mr-1" />
+                <FontAwesomeIcon icon={faTimes} className="h-4 w-4 mr-1.5" />
                 Clear All Filters
               </div>
             )}
 
             {/* Apply button for mobile */}
             {showFilters && (
-              <div className="md:hidden mt-4">
+              <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
                 <button
                   onClick={toggleFilters}
-                  className="w-full py-3 bg-sky-700 text-white rounded-md font-semibold"
+                  className="w-full py-3.5 bg-sky-950 text-white rounded-xl font-semibold text-base hover:bg-sky-800 active:scale-[0.98] transition-all"
                 >
                   Apply Filters
                 </button>
               </div>
             )}
+          </div>
           </div>
 
           {/* Products Grid Section */}
@@ -445,10 +461,9 @@ const NewArrivals = () => {
                 />
                 <span className="ml-2">Loading Products...</span>
               </div>
-            ) : sortedProducts.length > 0 ? (
-              sortedProducts.map((product, index) => {
-                const isLongName = product.name.length > 20;
-
+            ) : visibleProducts.length > 0 ? (
+              <Fragment>
+              {visibleProducts.map((product, index) => {
                 return (
                   <div key={index} className="border border-gray-200 flex flex-col bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden group">
                     {/* Product image */}
@@ -462,24 +477,24 @@ const NewArrivals = () => {
 
                     {/* Product details */}
                     <div className="p-3 sm:p-4 flex flex-col flex-grow bg-white">
-                      <h5 className={`${isLongName ? "text-xs sm:text-sm" : "text-sm sm:text-base"} font-semibold line-clamp-2 min-h-[2.5em] text-slate-800`}>
+                      <h5 className="text-sm md:text-base font-semibold line-clamp-2 min-h-[2.5em] text-slate-800">
                         {product.name}
                       </h5>
                       <div className="flex justify-between items-center mt-2">
-                        <p className="text-slate-500 text-xs sm:text-sm font-medium">{product.company}</p>
-                        <p className="text-sky-900 font-bold text-sm sm:text-base">
+                        <p className="text-slate-500 text-sm font-medium">{product.company}</p>
+                        <p className="text-sky-900 font-bold text-sm md:text-base">
                           ₹{product.price}
                         </p>
                       </div>
                       <div className="mt-auto pt-3">
                         {!product.stock ? (
-                          <p className="text-red-500 font-semibold text-xs sm:text-sm text-center py-2">
+                          <p className="text-red-500 font-semibold text-sm text-center py-2">
                             Restocking soon
                           </p>
                         ) : (
                           <button
                             onClick={() => addToCart(product)}
-                            className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm"
+                            className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-sm font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm"
                           >
                             Add to Cart
                           </button>
@@ -488,7 +503,18 @@ const NewArrivals = () => {
                     </div>
                   </div>
                 );
-              })
+              })}
+              {hasMore && (
+                <div className="col-span-2 md:col-span-3 flex justify-center mt-6">
+                  <button
+                    onClick={handleShowMore}
+                    className="bg-sky-950 text-white px-8 py-3 rounded-xl font-semibold text-sm md:text-base hover:bg-sky-800 active:scale-[0.97] transition-all shadow-md"
+                  >
+                    Show More
+                  </button>
+                </div>
+              )}
+              </Fragment>
             ) : (
               <div className="border border-gray-300 p-4 flex justify-center items-center col-span-2 md:col-span-3 rounded-md">
                 <div className="font-montserrat text-xl md:text-2xl font-semibold text-gray-700 text-center">
