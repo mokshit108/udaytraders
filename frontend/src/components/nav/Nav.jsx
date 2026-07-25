@@ -30,7 +30,7 @@ const Nav = () => {
   return (
     <>
    
- <header className="py-5 absolute z-10 w-full bg-sky-950 text-white font-semibold lg:fixed">
+  <header className="absolute z-10 w-full bg-sky-950 text-white font-semibold lg:fixed">
      <NavLarge
           username={username}
           location={location}

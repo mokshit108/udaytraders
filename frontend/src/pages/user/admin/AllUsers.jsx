@@ -7,12 +7,9 @@ import {
   faCheck,
   faTimes,
   faDownload,
-  faUpload,
-  faExclamationTriangle,
-  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useState, useRef } from "react";
-import AddUserModal from "./modal/AddUserModal"; // Import the modal component
+import { useEffect, useState } from "react";
+import AddUserModal from "./modal/AddUserModal";
 import { useExcel } from "../../../hooks/useExcel";
 
 const AllUsers = () => {
@@ -24,83 +21,10 @@ const AllUsers = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [roles, setRoles] = useState([]);
-  // const [importing, setImporting] = useState(false);
-  // const [importError, setImportError] = useState(null);
-  // const [importInfo, setImportInfo] = useState(null);
-  // const fileInputRef = useRef(null);
 
-  const { downloadData, importExcelData } = useExcel();
+  const { downloadData } = useExcel();
 
-  const tableName = "User"; // Set the table name
-
-  // const databasetableName = "users";
- 
-  // // Function to show alert
-  // const showAlert = (type, message) => {
-  //   setAlertInfo({ type, message });
-  //   // Auto hide alert after 5 seconds
-  //   setTimeout(() => setAlertInfo(null), 5000);
-  // };
-
-  // const handleImportClick = () => {
-  //   setImportError(null);
-  //   setImportInfo({
-  //     type: 'info',
-  //     message: 'Please upload an Excel file (.xlsx, .xls) or CSV file with the following columns: username, email, role'
-  //   });
-  //   fileInputRef.current?.click();
-  // };
-
-  // const handleFileChange = async (event) => {
-  //   const file = event.target.files?.[0];
-  //   if (!file) return;
-  
-  //   try {
-  //     setImporting(true);
-  //     setImportError(null);
-  //     setImportInfo({
-  //       type: 'info',
-  //       message: `Processing file: ${file.name}`
-  //     });
-  
-  //     const result = await importExcelData(
-  //       file,
-  //       databasetableName,
-  //       (result) => {
-  //         fetchUsers();
-  //         setImportInfo({
-  //           type: 'success',
-  //           message: `Successfully imported ${result.successCount} users`
-  //         });
-  //       },
-  //       (error) => {
-  //         setImportError({
-  //           type: 'error',
-  //           message: error
-  //         });
-  //       }
-  //     );
-  
-  //     // Display partial success message if some users were imported
-  //     if (result.successCount > 0 && result.errors?.length > 0) {
-  //       setImportInfo({
-  //         type: 'warning',
-  //         message: `Imported ${result.successCount} users with ${result.errors.length} errors`
-  //       });
-  //     }
-  
-  //   } catch (error) {
-  //     setImportError({
-  //       type: 'error',
-  //       message: error.message
-  //     });
-  //   } finally {
-  //     setImporting(false);
-  //     if (fileInputRef.current) {
-  //       fileInputRef.current.value = '';
-  //     }
-  //   }
-  // };
+  const tableName = "User";
 
   const userId = sessionStorage.getItem("id");
 
@@ -237,75 +161,23 @@ const AllUsers = () => {
       </h2>
 
       {/* Add New User Button */}
-      <button
-        onClick={openModal}
-        className="bg-sky-950 text-white px-2 py-2 rounded inline-flex items-center md:mb-4 gap-2"
-      >
-        <FontAwesomeIcon icon={faPlus} /> {/* Plus icon */}
-        Add New
-      </button>
-
-      <button
-          onClick={handleDownloadExcel}
-          className="bg-green-600 text-white px-3 ml-3 py-2 rounded inline-flex items-center gap-2"
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          onClick={openModal}
+          className="bg-sky-950 text-white px-4 py-2 rounded inline-flex items-center gap-2"
         >
-          <FontAwesomeIcon icon={faDownload} /> {/* Download icon */}
+          <FontAwesomeIcon icon={faPlus} />
+          Add New
+        </button>
+
+        <button
+          onClick={handleDownloadExcel}
+          className="bg-green-600 text-white px-4 py-2 rounded inline-flex items-center gap-2"
+        >
+          <FontAwesomeIcon icon={faDownload} />
           Download Excel
         </button>
-
-        {/* <button
-          onClick={handleImportClick}
-          className="bg-blue-600 text-white px-3 py-2 rounded inline-flex items-center gap-2"
-          disabled={importing}
-        >
-          <FontAwesomeIcon icon={faUpload} spin={importing} />
-          {importing ? 'Importing...' : 'Import Excel'}
-        </button>
-
-
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".xlsx,.xls,.csv"
-          className="hidden"
-        /> */}
-
-         {/* Info Message */}
-      {/* {importInfo && (
-        <div className={`mb-4 p-4 rounded-lg flex items-center gap-2 ${
-          importInfo.type === 'success' 
-            ? 'bg-green-100 text-green-700 border border-green-400'
-            : 'bg-blue-100 text-blue-700 border border-blue-400'
-        }`}>
-          <FontAwesomeIcon 
-            icon={importInfo.type === 'success' ? faCheck : faInfoCircle} 
-            className="flex-shrink-0"
-          />
-          <span>{importInfo.message}</span>
-          <button 
-            onClick={() => setImportInfo(null)} 
-            className="ml-auto text-gray-500 hover:text-gray-700"
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-        </div>
-      )} */}
-
-      {/* Error Message */}
-      {/* {importError && (
-        <div className="mb-4 p-4 rounded-lg flex items-center gap-2 bg-red-100 text-red-700 border border-red-400">
-          <FontAwesomeIcon icon={faExclamationTriangle} className="flex-shrink-0" />
-          <span>{importError.message}</span>
-          <button 
-            onClick={() => setImportError(null)} 
-            className="ml-auto text-gray-500 hover:text-gray-700"
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-        </div>
-      )} */}
+      </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-screen w-full">
@@ -533,24 +405,24 @@ const AllUsers = () => {
 
           {/* Delete Confirmation Modal */}
           {showDeleteModal && (
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-              <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-                <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
-                <p className="text-gray-700">
-                  Are you sure you want to delete {userToDelete.username}?
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+                <h3 className="text-lg font-bold mb-3 text-gray-900">Confirm Delete</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete <strong className="text-gray-900">{userToDelete?.username}</strong>?
                 </p>
-                <div className="flex justify-end space-x-4 mt-4">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                   <button
-                    className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200"
-                    onClick={handleDeleteUser}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400 transition duration-200"
+                    className="w-full sm:w-auto bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition"
                     onClick={() => setShowDeleteModal(false)}
                   >
                     Cancel
+                  </button>
+                  <button
+                    className="w-full sm:w-auto bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium transition"
+                    onClick={handleDeleteUser}
+                  >
+                    Delete
                   </button>
                 </div>
               </div>

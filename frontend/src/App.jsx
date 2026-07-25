@@ -69,10 +69,10 @@ const Home = () => {
     <>
 
       <section className="min-h-[80vh] pt-28 md:pt-32 pb-12 md:pb-16 px-4 sm:px-6 md:px-8 bg-slate-50 flex flex-col items-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-palanquin font-bold text-sky-950 mb-4 md:mb-6 text-center leading-tight">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-palanquin font-bold text-sky-950 mb-4 md:mb-6 text-center leading-tight">
           Welcome to Uday Traders
         </h1>
-        <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-montserrat mb-8 md:mb-12 text-center max-w-md sm:max-w-xl md:max-w-2xl px-2">
+        <p className="text-sm sm:text-lg lg:text-xl text-slate-600 font-montserrat mb-8 md:mb-12 text-center max-w-md sm:max-w-xl md:max-w-2xl px-2">
           Your one-stop destination for premium products. Explore our catalog below for high-quality supplies.
         </p>
 

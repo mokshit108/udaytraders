@@ -219,32 +219,32 @@ const AllCategories = () => {
       </h2>
 
       {/* Add New Category Button */}
-      <button
-        onClick={openModal}
-        className="bg-sky-950 text-white px-2 py-2 rounded inline-flex items-center md:mb-4 gap-2"
-      >
-        <FontAwesomeIcon icon={faPlus} /> {/* Plus icon */}
-        Add New
-      </button>
-
-      <button
-          onClick={handleDownloadExcel}
-          className="bg-green-600 text-white px-3 ml-3 py-2 rounded inline-flex items-center gap-2"
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          onClick={openModal}
+          className="bg-sky-950 text-white px-4 py-2 rounded inline-flex items-center gap-2"
         >
-          <FontAwesomeIcon icon={faDownload} /> {/* Download icon */}
-          Download Excel
-      </button>
+          <FontAwesomeIcon icon={faPlus} />
+          Add New
+        </button>
 
-      <button
+        <button
+          onClick={handleDownloadExcel}
+          className="bg-green-600 text-white px-4 py-2 rounded inline-flex items-center gap-2"
+        >
+          <FontAwesomeIcon icon={faDownload} />
+          Download Excel
+        </button>
+
+        <button
           onClick={handleImportClick}
-          className="bg-blue-600 text-white px-3 ml-3 py-2 rounded inline-flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded inline-flex items-center gap-2"
           disabled={importing}
         >
           <FontAwesomeIcon icon={faUpload} spin={importing} />
           {importing ? 'Importing...' : 'Import Excel'}
         </button>
-
-
+      </div>
 
         <input
           type="file"
@@ -457,24 +457,24 @@ const AllCategories = () => {
 
           {/* Delete Confirmation Modal */}
           {showDeleteModal && (
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-              <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-                <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
-                <p className="mb-4">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+                <h3 className="text-lg font-bold mb-3 text-gray-900">Confirm Delete</h3>
+                <p className="text-gray-600 mb-6">
                   Are you sure you want to delete this category?
                 </p>
-                <div className="flex justify-end">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                   <button
-                    className="bg-red-500 text-white px-4 py-2 rounded mr-2"
-                    onClick={handleDeleteCategory}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="bg-gray-300 px-4 py-2 rounded"
+                    className="w-full sm:w-auto bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition"
                     onClick={() => setShowDeleteModal(false)}
                   >
                     Cancel
+                  </button>
+                  <button
+                    className="w-full sm:w-auto bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium transition"
+                    onClick={handleDeleteCategory}
+                  >
+                    Delete
                   </button>
                 </div>
               </div>

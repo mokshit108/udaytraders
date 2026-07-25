@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTimes,
@@ -12,27 +12,27 @@ import {
   faAlignLeft,
   faCheckCircle,
   faExclamationCircle,
-  faPlus,
+  faPencilAlt,
   faCloudUploadAlt,
   faTrash,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companies }) => {
+const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categories, companies }) => {
   const [productName, setProductName]           = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice]         = useState("");
   const [productStock, setProductStock]         = useState("");
   const [productCategory, setProductCategory]   = useState("");
-  const [productImageUrl, setProductImageUrl]   = useState(""); // final Cloudinary URL
+  const [productImageUrl, setProductImageUrl]   = useState("");
   const [productCompany, setProductCompany]     = useState("");
   const [productIsPopular, setProductIsPopular] = useState(false);
   const [productSeries, setProductSeries]       = useState("");
 
-  const [imageFile, setImageFile]         = useState(null);   // selected File object
-  const [imagePreview, setImagePreview]   = useState("");     // local blob URL for preview
+  const [imageFile, setImageFile]         = useState(null);
+  const [imagePreview, setImagePreview]   = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);    // 0-100 fake progress
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [dragOver, setDragOver]           = useState(false);
 
   const [error, setError]         = useState("");
@@ -42,9 +42,21 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
   const fileInputRef = useRef(null);
   const tableName    = "Product";
 
-  /* ──────────────────────────────────────────────
-     Image helpers
-  ────────────────────────────────────────────── */
+  useEffect(() => {
+    if (product && isOpen) {
+      setProductName(product.name || "");
+      setProductDescription(product.description || "");
+      setProductPrice(product.price?.toString() || "");
+      setProductStock(product.stock?.toString() || "");
+      setProductCategory(product.category_name || "");
+      setProductImageUrl(product.img_url || "");
+      setImagePreview(product.img_url || "");
+      setProductCompany(product.company_name || "");
+      setProductIsPopular(product.is_popular === 1);
+      setProductSeries(product.series || "");
+    }
+  }, [product, isOpen]);
+
   const processFile = (file) => {
     if (!file) return;
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
@@ -59,7 +71,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     setError("");
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    setProductImageUrl(""); // clear any old URL
+    setProductImageUrl("");
   };
 
   const handleFileInput = (e) => processFile(e.target.files?.[0]);
@@ -77,7 +89,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  /* Upload selected file to Cloudinary via backend */
   const uploadToCloudinary = async () => {
     if (!imageFile) return null;
     setUploadingImage(true);
@@ -86,7 +97,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     const formData = new FormData();
     formData.append("image", imageFile);
 
-    // Fake progress ticks while request is in-flight
     const ticker = setInterval(() => {
       setUploadProgress((p) => (p < 85 ? p + 10 : p));
     }, 300);
@@ -104,7 +114,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
       }
       const data = await res.json();
       setUploadProgress(100);
-      return data.url; // Cloudinary secure_url
+      return data.url;
     } catch (err) {
       clearInterval(ticker);
       throw err;
@@ -113,9 +123,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     }
   };
 
-  /* ──────────────────────────────────────────────
-     Form helpers
-  ────────────────────────────────────────────── */
   const resetForm = () => {
     setProductName("");
     setProductDescription("");
@@ -155,17 +162,15 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
 
     setIsSubmitting(true);
     try {
-      // 1️⃣ Upload image first if a file was selected
       let finalUrl = productImageUrl;
       if (imageFile) {
         finalUrl = await uploadToCloudinary();
         setProductImageUrl(finalUrl);
       }
 
-      // 2️⃣ Save product to DB
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/profile/admin/crud/new/${tableName}`, {
-        method: "POST",
+      const response = await fetch(`${apiUrl}/profile/admin/crud/${tableName}/${product.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name:          productName,
@@ -186,10 +191,10 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
       }
 
       setSuccess(true);
-      setTimeout(() => { onProductAdded(); handleClose(); }, 1400);
+      setTimeout(() => { onProductUpdated(); handleClose(); }, 1400);
     } catch (err) {
-      console.error("Error adding product:", err);
-      setError(err.message || "Failed to add product. Please try again.");
+      console.error("Error updating product:", err);
+      setError(err.message || "Failed to update product. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -197,9 +202,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
 
   if (!isOpen) return null;
 
-  /* ──────────────────────────────────────────────
-     Render
-  ────────────────────────────────────────────── */
   return (
     <div
       className="apm-overlay"
@@ -207,21 +209,21 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     >
       <div className="apm-modal">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="apm-header">
           <div className="apm-header-icon">
-            <FontAwesomeIcon icon={faPlus} />
+            <FontAwesomeIcon icon={faPencilAlt} />
           </div>
           <div>
-            <h2 className="apm-title">Add New Product</h2>
-            <p className="apm-subtitle">Fill in the details below to add a product</p>
+            <h2 className="apm-title">Edit Product</h2>
+            <p className="apm-subtitle">Update the product details below</p>
           </div>
           <button className="apm-close-btn" onClick={handleClose} type="button">
             <FontAwesomeIcon icon={faTimes} />
           </button>
         </div>
 
-        {/* ── Alerts ── */}
+        {/* Alerts */}
         {error && (
           <div className="apm-alert apm-alert--error">
             <FontAwesomeIcon icon={faExclamationCircle} />
@@ -231,24 +233,22 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
         {success && (
           <div className="apm-alert apm-alert--success">
             <FontAwesomeIcon icon={faCheckCircle} />
-            <span>Product added successfully!</span>
+            <span>Product updated successfully!</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="apm-form">
 
-          {/* ── Image Upload Zone ── */}
+          {/* Image Upload Zone */}
           <div className="apm-image-section">
             <p className="apm-section-label">
               <FontAwesomeIcon icon={faImage} /> Product Image
             </p>
 
-            {/* Preview (shown after file chosen) */}
             {imagePreview ? (
               <div className="apm-image-preview-wrap">
                 <img src={imagePreview} alt="Preview" className="apm-preview-img" />
 
-                {/* Upload progress bar */}
                 {uploadingImage && (
                   <div className="apm-progress-bar-wrap">
                     <div className="apm-progress-bar" style={{ width: `${uploadProgress}%` }} />
@@ -258,7 +258,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
                   </div>
                 )}
 
-                {/* Uploaded badge */}
                 {productImageUrl && !uploadingImage && (
                   <div className="apm-uploaded-badge">
                     <FontAwesomeIcon icon={faCheckCircle} /> Uploaded to Cloudinary
@@ -275,7 +274,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
                 </button>
               </div>
             ) : (
-              /* Drag-and-drop zone */
               <div
                 className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
                 onClick={() => fileInputRef.current?.click()}
@@ -293,7 +291,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               </div>
             )}
 
-            {/* Hidden file input */}
             <input
               ref={fileInputRef}
               type="file"
@@ -303,17 +300,16 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
             />
           </div>
 
-          {/* ── Two-column grid ── */}
+          {/* Two-column grid */}
           <div className="apm-grid">
 
-            {/* Product Name */}
             <div className="apm-field apm-field--full">
-              <label className="apm-label" htmlFor="apm-name">
+              <label className="apm-label" htmlFor="apm-edit-name">
                 <FontAwesomeIcon icon={faTag} /> Product Name <span className="apm-req">*</span>
               </label>
               <input
                 type="text"
-                id="apm-name"
+                id="apm-edit-name"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 className="apm-input"
@@ -322,13 +318,12 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               />
             </div>
 
-            {/* Description */}
             <div className="apm-field apm-field--full">
-              <label className="apm-label" htmlFor="apm-desc">
+              <label className="apm-label" htmlFor="apm-edit-desc">
                 <FontAwesomeIcon icon={faAlignLeft} /> Description
               </label>
               <textarea
-                id="apm-desc"
+                id="apm-edit-desc"
                 value={productDescription}
                 onChange={(e) => setProductDescription(e.target.value)}
                 className="apm-input apm-textarea"
@@ -337,14 +332,13 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               />
             </div>
 
-            {/* Price */}
             <div className="apm-field">
-              <label className="apm-label" htmlFor="apm-price">
+              <label className="apm-label" htmlFor="apm-edit-price">
                 <FontAwesomeIcon icon={faDollarSign} /> Price (₹) <span className="apm-req">*</span>
               </label>
               <input
                 type="number"
-                id="apm-price"
+                id="apm-edit-price"
                 value={productPrice}
                 onChange={(e) => setProductPrice(e.target.value)}
                 className="apm-input"
@@ -355,14 +349,13 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               />
             </div>
 
-            {/* Stock */}
             <div className="apm-field">
-              <label className="apm-label" htmlFor="apm-stock">
+              <label className="apm-label" htmlFor="apm-edit-stock">
                 <FontAwesomeIcon icon={faBoxes} /> Stock Quantity
               </label>
               <input
                 type="number"
-                id="apm-stock"
+                id="apm-edit-stock"
                 value={productStock}
                 onChange={(e) => setProductStock(e.target.value)}
                 className="apm-input"
@@ -372,13 +365,12 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               />
             </div>
 
-            {/* Category */}
             <div className="apm-field">
-              <label className="apm-label" htmlFor="apm-category">
+              <label className="apm-label" htmlFor="apm-edit-category">
                 <FontAwesomeIcon icon={faLayerGroup} /> Category <span className="apm-req">*</span>
               </label>
               <select
-                id="apm-category"
+                id="apm-edit-category"
                 value={productCategory}
                 onChange={(e) => setProductCategory(e.target.value)}
                 className="apm-input apm-select"
@@ -391,13 +383,12 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               </select>
             </div>
 
-            {/* Company */}
             <div className="apm-field">
-              <label className="apm-label" htmlFor="apm-company">
+              <label className="apm-label" htmlFor="apm-edit-company">
                 <FontAwesomeIcon icon={faBuilding} /> Company <span className="apm-req">*</span>
               </label>
               <select
-                id="apm-company"
+                id="apm-edit-company"
                 value={productCompany}
                 onChange={(e) => setProductCompany(e.target.value)}
                 className="apm-input apm-select"
@@ -410,14 +401,13 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               </select>
             </div>
 
-            {/* Series */}
             <div className="apm-field apm-field--full">
-              <label className="apm-label" htmlFor="apm-series">
+              <label className="apm-label" htmlFor="apm-edit-series">
                 <FontAwesomeIcon icon={faLayerGroup} /> Series
               </label>
               <input
                 type="text"
-                id="apm-series"
+                id="apm-edit-series"
                 value={productSeries}
                 onChange={(e) => setProductSeries(e.target.value)}
                 className="apm-input"
@@ -425,7 +415,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               />
             </div>
 
-            {/* Is Popular toggle */}
             <div className="apm-field apm-field--full">
               <div className="apm-toggle-row">
                 <div className="apm-toggle-info">
@@ -447,7 +436,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
             </div>
           </div>
 
-          {/* ── Footer ── */}
+          {/* Footer */}
           <div className="apm-footer">
             <button type="button" onClick={handleClose} className="apm-btn apm-btn--cancel">
               Cancel
@@ -462,16 +451,16 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
               ) : isSubmitting ? (
                 <><span className="apm-spinner" /> Saving…</>
               ) : success ? (
-                <><FontAwesomeIcon icon={faCheckCircle} /> Added!</>
+                <><FontAwesomeIcon icon={faCheckCircle} /> Updated!</>
               ) : (
-                <><FontAwesomeIcon icon={faPlus} /> Add Product</>
+                <><FontAwesomeIcon icon={faPencilAlt} /> Update Product</>
               )}
             </button>
           </div>
         </form>
       </div>
 
-      {/* ── Scoped styles ── */}
+      {/* Scoped styles */}
       <style>{`
         .apm-overlay {
           position: fixed; inset: 0;
@@ -691,4 +680,4 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
   );
 };
 
-export default AddProductModal;
+export default EditProductModal;

@@ -4,8 +4,6 @@ import {
   faTrash,
   faEdit,
   faPlus,
-  faCheck,
-  faTimes,
   faDownload,
   faUpload,
   faExclamationTriangle,
@@ -13,13 +11,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState, useRef } from "react";
 import AddProductModal from "./modal/AddProductModal"; // Import the modal component
+import EditProductModal from "./modal/EditProductModal";
 import { useExcel } from "../../../hooks/useExcel";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingProductId, setEditingProductId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
@@ -28,6 +26,8 @@ const AllProducts = () => {
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState(null);
   const [importInfo, setImportInfo] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState(null);
   const fileInputRef = useRef(null);
 
   const { downloadData, importExcelData } = useExcel();
@@ -174,47 +174,10 @@ const AllProducts = () => {
     downloadData(products, 'AllProducts');
   };
 
-  const handleEditProduct = async (id) => {
-    const productToUpdate = products.find((product) => product.id === id);
-    const updatedProduct = {
-      ...productToUpdate,
-      category_id: category.find(
-        (cat) => cat.name === productToUpdate.category_name
-      )?.id,
-      company_id: company.find(
-        (com) => com.name === productToUpdate.company_name
-      )?.id,
-    };
-
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(
-        `${apiUrl}/profile/admin/crud/${tableName}/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedProduct),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
-      }
-
-      const newProduct = await response.json();
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
-          product.id === id ? newProduct : product
-        )
-      );
-      setEditingProductId(null);
-      fetchProducts();
-    } catch (error) {
-      console.error("Error editing product:", error);
-      setError(error.message);
-    }
+  const handleProductUpdated = () => {
+    setEditModalOpen(false);
+    setProductToEdit(null);
+    fetchProducts();
   };
 
   const handleDeleteProduct = async () => {
@@ -241,8 +204,9 @@ const AllProducts = () => {
     }
   };
 
-  const handleEditClick = (id) => {
-    setEditingProductId(id);
+  const handleEditClick = (product) => {
+    setProductToEdit(product);
+    setEditModalOpen(true);
   };
 
   const handleDeleteClick = (product) => {
@@ -261,12 +225,6 @@ const AllProducts = () => {
   const handleProductAdded = () => {
     fetchProducts();
     closeModal();
-  };
-
-  const updateProductField = (productId, field, value) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, [field]: value } : p))
-    );
   };
 
   // Pagination logic
@@ -291,30 +249,32 @@ const AllProducts = () => {
       </h2>
 
       {/* Add New Product Button */}
-      <button
-        onClick={openModal}
-        className="bg-sky-950 text-white px-2 py-2 rounded inline-flex items-center md:mb-4 gap-2"
-      >
-        <FontAwesomeIcon icon={faPlus} /> {/* Plus icon */}
-        Add New
-      </button>
-
-      <button
-          onClick={handleDownloadExcel}
-          className="bg-green-600 text-white px-3 ml-3 py-2 rounded inline-flex items-center gap-2"
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          onClick={openModal}
+          className="bg-sky-950 text-white px-4 py-2 rounded inline-flex items-center gap-2"
         >
-          <FontAwesomeIcon icon={faDownload} /> {/* Download icon */}
+          <FontAwesomeIcon icon={faPlus} />
+          Add New
+        </button>
+
+        <button
+          onClick={handleDownloadExcel}
+          className="bg-green-600 text-white px-4 py-2 rounded inline-flex items-center gap-2"
+        >
+          <FontAwesomeIcon icon={faDownload} />
           Download Excel
         </button>
 
         <button
           onClick={handleImportClick}
-          className="bg-blue-600 text-white px-3 ml-3 py-2 rounded inline-flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded inline-flex items-center gap-2"
           disabled={importing}
         >
           <FontAwesomeIcon icon={faUpload} spin={importing} />
           {importing ? 'Importing...' : 'Import Excel'}
         </button>
+      </div>
 
 
 
@@ -413,337 +373,96 @@ const AllProducts = () => {
               {/* For Mobile View - Card Format */}
               <div className="flex flex-col space-y-2 lg:hidden">
                 <div className="flex justify-center">
-                  {editingProductId === product.id ? (
-                    <input
-                      type="text"
-                      value={product.img_url}
-                      onChange={(e) =>
-                        updateProductField(
-                          product.id,
-                          e.target.name,
-                          e.target.value
-                        )
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    />
-                  ) : (
-                    <img
-                      src={product.img_url}
-                      alt={product.name}
-                      className="w-36 h-36 object-cover rounded-lg"
-                    />
-                  )}
+                  <img
+                    src={product.img_url}
+                    alt={product.name}
+                    className="w-36 h-36 object-cover rounded-lg"
+                  />
                 </div>
                 <div>
                   <span className="text-gray-600 font-semibold">Name: </span>
-                  {editingProductId === product.id ? (
-                    <input
-                      type="text"
-                      value={product.name}
-                      onChange={(e) =>
-                        updateProductField(product.id, "name", e.target.value)
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    />
-                  ) : (
-                    <span className="text-gray-800">{product.name}</span>
-                  )}
+                  <span className="text-gray-800">{product.name}</span>
                 </div>
                 <div>
                   <span className="text-gray-600 font-semibold">Price: </span>
-                  {editingProductId === product.id ? (
-                    <input
-                      type="text"
-                      value={product.price}
-                      onChange={(e) =>
-                        updateProductField(product.id, "price", e.target.value)
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    />
-                  ) : (
-                    <span className="text-gray-800">₹{product.price}</span>
-                  )}
+                  <span className="text-gray-800">₹{product.price}</span>
                 </div>
                 <div>
                   <span className="text-gray-600 font-semibold">Category:</span>
-                  {editingProductId === product.id ? (
-                    <select
-                      value={product.category_name}
-                      onChange={(e) =>
-                        updateProductField(
-                          product.id,
-                          "category_name",
-                          e.target.value
-                        )
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    >
-                      {category.map((cat) => (
-                        <option key={cat.id} value={cat.name}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="text-gray-800">
-                      {product.category_name}
-                    </span>
-                  )}
+                  <span className="text-gray-800">
+                    {product.category_name}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600 font-semibold">Company:</span>
-                  {editingProductId === product.id ? (
-                    <select
-                      value={product.company_name}
-                      onChange={(e) =>
-                        updateProductField(
-                          product.id,
-                          "company_name",
-                          e.target.value
-                        )
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    >
-                      {company.map((com) => (
-                        <option key={com.id} value={com.name}>
-                          {com.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="text-gray-800">
-                      {product.company_name}
-                    </span>
-                  )}
+                  <span className="text-gray-800">
+                    {product.company_name}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600 font-semibold">Stock: </span>
-                  {editingProductId === product.id ? (
-                    <select
-                      name="stock"
-                      value={product.stock === 1 ? "Yes" : "No"}
-                      onChange={(e) =>
-                        updateProductField(
-                          product.id,
-                          "stock",
-                          e.target.value === "Yes" ? 1 : 0
-                        )
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : (
-                    <span className="text-gray-800">
-                      {product.stock === 1 ? "Yes" : "No"}
-                    </span>
-                  )}
+                  <span className="text-gray-800">
+                    {product.stock === 1 ? "Yes" : "No"}
+                  </span>
                 </div>
 
                 <div>
                   <span className="text-gray-600 font-semibold">Popular: </span>
-                  {editingProductId === product.id ? (
-                    <select
-                      name="is_popular"
-                      value={product.is_popular === 1 ? "Yes" : "No"}
-                      onChange={(e) =>
-                        updateProductField(
-                          product.id,
-                          "is_popular",
-                          e.target.value === "Yes" ? 1 : 0
-                        )
-                      }
-                      className="p-2 border border-gray-300 rounded w-full"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : (
-                    <span className="text-gray-800">
-                      {product.is_popular === 1 ? "Yes" : "No"}
-                    </span>
-                  )}
+                  <span className="text-gray-800">
+                    {product.is_popular === 1 ? "Yes" : "No"}
+                  </span>
                 </div>
               </div>
 
               {/* For larger screens */}
               <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-center text-center lg:w-1/6">
-                {editingProductId === product.id ? (
-                  <input
-                    type="text"
-                    value={product.img_url}
-                    onChange={(e) =>
-                      updateProductField(product.id, "img_url", e.target.value)
-                    }
-                    className="p-2 border border-gray-300 rounded w-full"
-                  />
-                ) : (
-                  <img
-                    src={product.img_url}
-                    alt={product.name}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
-                )}
+                <img
+                  src={product.img_url}
+                  alt={product.name}
+                  className="w-20 h-20 object-cover rounded-lg"
+                />
               </div>
               <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-center text-center lg:w-1/3">
-                {editingProductId === product.id ? (
-                  <input
-                    type="text"
-                    value={product.name}
-                    onChange={(e) =>
-                      updateProductField(product.id, "name", e.target.value)
-                    }
-                    className="p-2 border border-gray-300 rounded w-full"
-                  />
-                ) : (
-                  <span className="text-gray-800">{product.name}</span>
-                )}
+                <span className="text-gray-800">{product.name}</span>
               </div>
 
               <div className="hidden lg:flex flex-col md:flex-row lg:items-center justify-center text-center lg:w-1/5">
-                {editingProductId === product.id ? (
-                  <input
-                    type="text"
-                    value={product.price}
-                    onChange={(e) =>
-                      updateProductField(product.id, "price", e.target.value)
-                    }
-                    className="p-2 border border-gray-300 rounded w-full"
-                  />
-                ) : (
-                  <span className="text-gray-800">₹{product.price}</span>
-                )}
+                <span className="text-gray-800">₹{product.price}</span>
               </div>
 
               <div className="hidden lg:flex flex-col md:flex-row lg:items-center justify-center text-center lg:w-1/4">
-                {editingProductId === product.id ? (
-                  <select
-                    value={product.category_name} // or product.category.id if categories are stored by ID
-                    onChange={(e) =>
-                      updateProductField(
-                        product.id,
-                        "category_name",
-                        e.target.value
-                      )
-                    } // Call updateProductField
-                    className="p-2 border border-gray-300 rounded w-full"
-                  >
-                    {category.map((cat) => (
-                      <option key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-gray-800">{product.category_name}</span>
-                )}
+                <span className="text-gray-800">{product.category_name}</span>
               </div>
 
               <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-center text-center lg:w-1/4">
-                {editingProductId === product.id ? (
-                  <select
-                    value={product.company_name}
-                    onChange={(e) =>
-                      updateProductField(
-                        product.id,
-                        "company_name",
-                        e.target.value
-                      )
-                    } // Call updateProductField
-                    className="p-2 border border-gray-300 rounded w-full"
-                  >
-                    {company.map((com) => (
-                      <option key={com.id} value={com.name}>
-                        {com.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-gray-800">{product.company_name}</span>
-                )}
+                <span className="text-gray-800">{product.company_name}</span>
               </div>
 
               <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-center text-center lg:w-1/5">
-                {editingProductId === product.id ? (
-                  <select
-                    name="stock"
-                    value={product.stock === 1 ? "Yes" : "No"}
-                    onChange={(e) =>
-                      updateProductField(
-                        product.id,
-                        "stock",
-                        e.target.value === "Yes" ? 1 : 0 // Convert to numeric representation
-                      )
-                    }
-                    className="p-2 border border-gray-300 rounded w-full"
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                ) : (
-                  <span className="text-gray-800">
-                    {product.stock === 1 ? "Yes" : "No"}
-                  </span>
-                )}
+                <span className="text-gray-800">
+                  {product.stock === 1 ? "Yes" : "No"}
+                </span>
               </div>
 
               <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-center text-center lg:w-1/5">
-                {editingProductId === product.id ? (
-                  <select
-                    name="is_popular"
-                    value={product.is_popular === 1 ? "Yes" : "No"}
-                    onChange={(e) =>
-                      updateProductField(
-                        product.id,
-                        "is_popular",
-                        e.target.value === "Yes" ? 1 : 0 // Convert to numeric representation
-                      )
-                    }
-                    className="p-2 border border-gray-300 rounded w-full"
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                ) : (
-                  <span className="text-gray-800">
-                    {product.is_popular === 1 ? "Yes" : "No"}
-                  </span>
-                )}
+                <span className="text-gray-800">
+                  {product.is_popular === 1 ? "Yes" : "No"}
+                </span>
               </div>
 
               <div className="flex justify-center lg:w-1/6 text-center space-x-2 mt-4 lg:mt-0">
-                {editingProductId === product.id ? (
-                  <>
-                    <button
-                      className="text-green-500 hover:text-green-700"
-                      onClick={() => handleEditProduct(product.id)}
-                    >
-                      <FontAwesomeIcon icon={faCheck} />
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => setEditingProductId(null)}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="text-sky-950 hover:text-blue-700"
-                      onClick={() => handleEditClick(product.id)}
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => handleDeleteClick(product)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </>
-                )}
+                <button
+                  className="text-sky-950 hover:text-blue-700"
+                  onClick={() => handleEditClick(product)}
+                >
+                  <FontAwesomeIcon icon={faEdit} />
+                </button>
+                <button
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => handleDeleteClick(product)}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
               </div>
             </div>
           ))}
@@ -778,27 +497,36 @@ const AllProducts = () => {
         companies={company} // Pass companies to modal
       />
 
+      <EditProductModal
+        isOpen={editModalOpen}
+        onClose={() => { setEditModalOpen(false); setProductToEdit(null); }}
+        onProductUpdated={handleProductUpdated}
+        product={productToEdit}
+        categories={category}
+        companies={company}
+      />
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-4 rounded-lg shadow-md max-w-md mx-auto">
-            <h2 className="text-lg font-semibold mb-4">Confirm Delete</h2>
-            <p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full mx-auto">
+            <h2 className="text-lg font-bold mb-3 text-gray-900">Confirm Delete</h2>
+            <p className="text-gray-600 mb-6">
               Are you sure you want to delete{" "}
-              <strong>{productToDelete?.name}</strong>?
+              <strong className="text-gray-900">{productToDelete?.name}</strong>?
             </p>
-            <div className="flex justify-end mt-4 gap-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
               <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
-                onClick={handleDeleteProduct}
-              >
-                Yes, Delete
-              </button>
-              <button
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                className="w-full sm:w-auto bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition"
                 onClick={() => setShowDeleteModal(false)}
               >
                 Cancel
+              </button>
+              <button
+                className="w-full sm:w-auto bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium transition"
+                onClick={handleDeleteProduct}
+              >
+                Yes, Delete
               </button>
             </div>
           </div>
