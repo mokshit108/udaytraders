@@ -19,96 +19,114 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companies }) => {
-  const [productName, setProductName]           = useState("");
+  const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
-  const [productPrice, setProductPrice]         = useState("");
-  const [productStock, setProductStock]         = useState("");
-  const [productCategory, setProductCategory]   = useState("");
-  const [productImageUrl, setProductImageUrl]   = useState(""); // final Cloudinary URL
-  const [productCompany, setProductCompany]     = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productStock, setProductStock] = useState("");
+  const [productCategory, setProductCategory] = useState("");
+  const [productImageUrls, setProductImageUrls] = useState([]); // final Cloudinary URLs
+  const [productCompany, setProductCompany] = useState("");
+  const [productSeries, setProductSeries] = useState("");
   const [productIsPopular, setProductIsPopular] = useState(false);
-  const [productSeries, setProductSeries]       = useState("");
 
-  const [imageFile, setImageFile]         = useState(null);   // selected File object
-  const [imagePreview, setImagePreview]   = useState("");     // local blob URL for preview
+  const [imageFiles, setImageFiles] = useState([]);   // selected File objects
+  const [imagePreviews, setImagePreviews] = useState([]);     // local blob URLs for preview
+  const [mainImageIdentifier, setMainImageIdentifier] = useState(null);
+
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);    // 0-100 fake progress
-  const [dragOver, setDragOver]           = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
-  const [error, setError]         = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess]     = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const fileInputRef = useRef(null);
-  const tableName    = "Product";
+  const tableName = "Product";
 
   /* ──────────────────────────────────────────────
      Image helpers
   ────────────────────────────────────────────── */
-  const processFile = (file) => {
-    if (!file) return;
+  const processFiles = (files) => {
+    if (!files || files.length === 0) return;
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-    if (!allowed.includes(file.type)) {
-      setError("Only JPEG, PNG, WEBP or GIF images are allowed.");
-      return;
+    const newFiles = [];
+    const newPreviews = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!allowed.includes(file.type)) {
+        setError("Only " + allowed.join(", ") + " are allowed.");
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError((prev) => (prev ? prev + "\n" : "") + "An image exceeds 5 MB.");
+        continue;
+      }
+      newFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be smaller than 5 MB.");
-      return;
-    }
+
     setError("");
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setProductImageUrl(""); // clear any old URL
+    setImageFiles((prev) => [...prev, ...newFiles]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+    setProductImageUrls([]);
   };
 
-  const handleFileInput = (e) => processFile(e.target.files?.[0]);
+  const handleFileInput = (e) => processFiles(e.target.files);
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    processFile(e.dataTransfer.files?.[0]);
+    processFiles(e.dataTransfer.files);
   };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview("");
-    setProductImageUrl("");
+  const removeImage = (index) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+    setProductImageUrls([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  /* Upload selected file to Cloudinary via backend */
+  /* Upload selected files to Cloudinary via backend */
   const uploadToCloudinary = async () => {
-    if (!imageFile) return null;
+    if (imageFiles.length === 0) return [];
     setUploadingImage(true);
     setUploadProgress(10);
+    const urls = [];
+    const apiUrl = import.meta.env.VITE_API_URL;
 
-    const formData = new FormData();
-    formData.append("image", imageFile);
-
-    // Fake progress ticks while request is in-flight
+    // Fake progress ticks
     const ticker = setInterval(() => {
-      setUploadProgress((p) => (p < 85 ? p + 10 : p));
-    }, 300);
+      setUploadProgress((p) => (p < 85 ? p + 5 : p));
+    }, 500);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const res = await fetch(`${apiUrl}/upload/image`, {
-        method: "POST",
-        body: formData,
-      });
-      clearInterval(ticker);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Image upload failed.");
+      for (const file of imageFiles) {
+        const formData = new FormData();
+        formData.append("image", file);
+        const res = await fetch(`${apiUrl}/upload/image`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Image upload failed.");
+        }
+        const data = await res.json();
+        urls.push(data.url);
       }
-      const data = await res.json();
+      clearInterval(ticker);
       setUploadProgress(100);
-      return data.url; // Cloudinary secure_url
+      return urls;
     } catch (err) {
       clearInterval(ticker);
       throw err;
     } finally {
+      clearInterval(ticker);
       setUploadingImage(false);
     }
   };
@@ -122,12 +140,13 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     setProductPrice("");
     setProductStock("");
     setProductCategory("");
-    setProductImageUrl("");
+    setProductImageUrls([]);
     setProductCompany("");
     setProductIsPopular(false);
     setProductSeries("");
-    setImageFile(null);
-    setImagePreview("");
+    setImageFiles([]);
+    setImagePreviews([]);
+    setMainImageIdentifier(null);
     setUploadProgress(0);
     setError("");
     setSuccess(false);
@@ -156,10 +175,21 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     setIsSubmitting(true);
     try {
       // 1️⃣ Upload image first if a file was selected
-      let finalUrl = productImageUrl;
-      if (imageFile) {
-        finalUrl = await uploadToCloudinary();
-        setProductImageUrl(finalUrl);
+      let finalUrls = productImageUrls;
+      if (imageFiles.length > 0 && finalUrls.length === 0) {
+        let uploadedUrls = await uploadToCloudinary();
+
+        if (mainImageIdentifier) {
+          const newIdx = imagePreviews.indexOf(mainImageIdentifier);
+          if (newIdx !== -1 && uploadedUrls[newIdx]) {
+            const targetUrl = uploadedUrls[newIdx];
+            uploadedUrls = uploadedUrls.filter(u => u !== targetUrl);
+            uploadedUrls.unshift(targetUrl);
+          }
+        }
+
+        finalUrls = uploadedUrls;
+        setProductImageUrls(finalUrls);
       }
 
       // 2️⃣ Save product to DB
@@ -168,15 +198,15 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name:          productName,
-          description:   productDescription,
-          price:         parseFloat(productPrice),
-          stock:         productStock !== "" ? parseInt(productStock) : 0,
+          name: productName,
+          description: productDescription,
+          price: parseFloat(productPrice),
+          stock: productStock !== "" ? parseInt(productStock) : 0,
           category_name: productCategory,
-          img_url:       finalUrl,
-          company_name:  productCompany,
-          is_popular:    productIsPopular ? 1 : 0,
-          series:        productSeries,
+          img_url: JSON.stringify(finalUrls),
+          company_name: productCompany,
+          is_popular: productIsPopular ? 1 : 0,
+          series: productSeries,
         }),
       });
 
@@ -244,13 +274,31 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
             </p>
 
             {/* Preview (shown after file chosen) */}
-            {imagePreview ? (
-              <div className="apm-image-preview-wrap">
-                <img src={imagePreview} alt="Preview" className="apm-preview-img" />
+            {imagePreviews.length > 0 && (
+              <div className="apm-image-preview-group" style={{ marginBottom: "15px" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {imagePreviews.map((preview, idx) => (
+                    <div key={idx} className="apm-image-preview-wrap" style={{ width: "100px", height: "100px", position: "relative" }}>
+                      <img src={preview} alt="Preview" className="apm-preview-img" style={{ height: "100%", width: "100%" }} />
+                      <button type="button" className="apm-remove-img-btn" onClick={() => removeImage(idx)} title="Remove image">
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        type="button"
+                        className="apm-remove-img-btn"
+                        style={{ left: "10px", right: "auto", background: (mainImageIdentifier === preview || (idx === 0 && !mainImageIdentifier)) ? "#f59e0b" : "rgba(0,0,0,0.5)" }}
+                        onClick={() => setMainImageIdentifier(preview)}
+                        title={mainImageIdentifier === preview ? "Main Image" : "Set as Main Image"}
+                      >
+                        <FontAwesomeIcon icon={faStar} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
 
                 {/* Upload progress bar */}
                 {uploadingImage && (
-                  <div className="apm-progress-bar-wrap">
+                  <div className="apm-progress-bar-wrap" style={{ position: "relative", marginTop: "10px", padding: "10px", borderRadius: "8px" }}>
                     <div className="apm-progress-bar" style={{ width: `${uploadProgress}%` }} />
                     <span className="apm-progress-label">
                       <FontAwesomeIcon icon={faSpinner} spin /> Uploading to Cloudinary…
@@ -259,44 +307,36 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
                 )}
 
                 {/* Uploaded badge */}
-                {productImageUrl && !uploadingImage && (
-                  <div className="apm-uploaded-badge">
+                {productImageUrls.length > 0 && !uploadingImage && (
+                  <div className="apm-uploaded-badge" style={{ position: "relative", marginTop: "10px", display: "inline-flex" }}>
                     <FontAwesomeIcon icon={faCheckCircle} /> Uploaded to Cloudinary
                   </div>
                 )}
-
-                <button
-                  type="button"
-                  className="apm-remove-img-btn"
-                  onClick={removeImage}
-                  title="Remove image"
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </button>
-              </div>
-            ) : (
-              /* Drag-and-drop zone */
-              <div
-                className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-              >
-                <div className="apm-dropzone-icon">
-                  <FontAwesomeIcon icon={faCloudUploadAlt} />
-                </div>
-                <p className="apm-dropzone-text">
-                  <strong>Click to upload</strong> or drag &amp; drop
-                </p>
-                <p className="apm-dropzone-hint">JPEG, PNG, WEBP, GIF · Max 5 MB</p>
               </div>
             )}
+
+            {/* Drag-and-drop zone always visible */}
+            <div
+              className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <div className="apm-dropzone-icon">
+                <FontAwesomeIcon icon={faCloudUploadAlt} />
+              </div>
+              <p className="apm-dropzone-text">
+                <strong>Click to upload</strong> or drag &amp; drop
+              </p>
+              <p className="apm-dropzone-hint">Upload multiple standard images · Max 5 MB each</p>
+            </div>
 
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
               style={{ display: "none" }}
               onChange={handleFileInput}

@@ -40,8 +40,8 @@ const AllProducts = () => {
 
   const databasetableName = "products";
 
-   // Function to show alert
-   const showAlert = (type, message) => {
+  // Function to show alert
+  const showAlert = (type, message) => {
     setAlertInfo({ type, message });
     // Auto hide alert after 5 seconds
     setTimeout(() => setAlertInfo(null), 5000);
@@ -59,7 +59,7 @@ const AllProducts = () => {
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-  
+
     try {
       setImporting(true);
       setImportError(null);
@@ -67,7 +67,7 @@ const AllProducts = () => {
         type: 'info',
         message: `Processing file: ${file.name}`
       });
-  
+
       const result = await importExcelData(
         file,
         databasetableName,
@@ -86,8 +86,8 @@ const AllProducts = () => {
         }
       );
 
-      console.log(result.errors,"my result")
-  
+      console.log(result.errors, "my result")
+
       // Display partial success message if some users were imported
       if (result.successCount > 0 && result.errors?.length > 0) {
         setImportInfo({
@@ -95,7 +95,7 @@ const AllProducts = () => {
           message: `Imported ${result.successCount} products with ${result.errors.length} errors`
         });
       }
-  
+
     } catch (error) {
       setImportError({
         type: 'error',
@@ -278,28 +278,27 @@ const AllProducts = () => {
 
 
 
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".xlsx,.xls,.csv"
-          className="hidden"
-        />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+      />
 
-         {/* Info Message */}
+      {/* Info Message */}
       {importInfo && (
-        <div className={`mb-4 p-4 rounded-lg flex items-center gap-2 ${
-          importInfo.type === 'success' 
+        <div className={`mb-4 p-4 rounded-lg flex items-center gap-2 ${importInfo.type === 'success'
             ? 'bg-green-100 text-green-700 border border-green-400'
             : 'bg-blue-100 text-blue-700 border border-blue-400'
-        }`}>
-          <FontAwesomeIcon 
-            icon={importInfo.type === 'success' ? faCheck : faInfoCircle} 
+          }`}>
+          <FontAwesomeIcon
+            icon={importInfo.type === 'success' ? faCheck : faInfoCircle}
             className="flex-shrink-0"
           />
           <span>{importInfo.message}</span>
-          <button 
-            onClick={() => setImportInfo(null)} 
+          <button
+            onClick={() => setImportInfo(null)}
             className="ml-auto text-gray-500 hover:text-gray-700"
           >
             <FontAwesomeIcon icon={faTimes} />
@@ -312,8 +311,8 @@ const AllProducts = () => {
         <div className="mb-4 p-4 rounded-lg flex items-center gap-2 bg-red-100 text-red-700 border border-red-400">
           <FontAwesomeIcon icon={faExclamationTriangle} className="flex-shrink-0" />
           <span>{importError.message}</span>
-          <button 
-            onClick={() => setImportError(null)} 
+          <button
+            onClick={() => setImportError(null)}
             className="ml-auto text-gray-500 hover:text-gray-700"
           >
             <FontAwesomeIcon icon={faTimes} />
@@ -374,7 +373,9 @@ const AllProducts = () => {
               <div className="flex flex-col space-y-2 lg:hidden">
                 <div className="flex justify-center">
                   <img
-                    src={product.img_url}
+                    src={(typeof product.img_url === 'string' && product.img_url.startsWith('['))
+                      ? (JSON.parse(product.img_url)[0] || '')
+                      : product.img_url}
                     alt={product.name}
                     className="w-36 h-36 object-cover rounded-lg"
                   />
@@ -417,7 +418,9 @@ const AllProducts = () => {
               {/* For larger screens */}
               <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-center text-center lg:w-1/6">
                 <img
-                  src={product.img_url}
+                  src={(typeof product.img_url === 'string' && product.img_url.startsWith('['))
+                    ? (JSON.parse(product.img_url)[0] || '')
+                    : product.img_url}
                   alt={product.name}
                   className="w-20 h-20 object-cover rounded-lg"
                 />
@@ -472,11 +475,10 @@ const AllProducts = () => {
               <button
                 key={index + 1}
                 onClick={() => handlePageChange(index + 1)}
-                className={`mx-1 w-10 h-10 rounded-full flex items-center justify-center transition duration-300 hover:bg-sky-800 ${
-                  currentPage === index + 1
+                className={`mx-1 w-10 h-10 rounded-full flex items-center justify-center transition duration-300 hover:bg-sky-800 ${currentPage === index + 1
                     ? "bg-sky-950 text-white"
                     : "bg-gray-200"
-                }`}
+                  }`}
               >
                 {index + 1}
               </button>

@@ -1,27 +1,52 @@
 
 
+import React, { useState } from 'react';
+import ImageModal from './ImageModal';
+
 const PopularProductCard = ({ img_url, name, price, product, stock }) => {
   const isLongName = name.length > 20;
-  
+
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const handleImageClick = () => {
+    setIsImageModalOpen(true);
+  };
+
+  let parsedImages = [];
+  try {
+    parsedImages = typeof img_url === 'string' && img_url.startsWith('[')
+      ? JSON.parse(img_url)
+      : (img_url ? [img_url] : []);
+  } catch (e) {
+    parsedImages = img_url ? [img_url] : [];
+  }
+
   return (
     <div className="flex flex-1 flex-col w-full h-full p-4 sm:p-5 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-xl transition-shadow duration-300 group">
-      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center rounded-lg overflow-hidden mb-4 relative">
-        <img 
-          src={img_url} 
-          alt={name} 
-          className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" 
+      <div
+        className="w-full aspect-square bg-gray-50 flex items-center justify-center rounded-lg overflow-hidden mb-4 relative cursor-pointer"
+        onClick={handleImageClick}
+        title="Click to view all images"
+      >
+        {parsedImages.length > 1 && (
+          <div className="absolute top-2 right-2 z-10 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full pointer-events-none">
+            {parsedImages.length} Images
+          </div>
+        )}
+        <img
+          src={parsedImages[0] || ''}
+          alt={name}
+          className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
         />
       </div>
-      
+
       <div className="flex flex-col flex-grow justify-between">
         <h3
-          className={` ${
-            isLongName ? "text-lg md:text-xl" : "text-xl md:text-2xl"
-          } leading-snug font-semibold font-palanquin text-slate-800 mb-2 line-clamp-2`}
+          className={` ${isLongName ? "text-lg md:text-xl" : "text-xl md:text-2xl"
+            } leading-snug font-semibold font-palanquin text-slate-800 mb-2 line-clamp-2`}
         >
           {name}
         </h3>
-        
+
         <div className="mt-auto">
           <p className="font-bold font-montserrat text-sky-900 text-lg md:text-xl mb-2">
             ₹{Math.floor(price)}
@@ -37,6 +62,11 @@ const PopularProductCard = ({ img_url, name, price, product, stock }) => {
           )}
         </div>
       </div>
+      <ImageModal
+        images={parsedImages}
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+      />
     </div>
   );
 };

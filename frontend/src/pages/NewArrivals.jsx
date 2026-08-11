@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faCheck, faFilter, faSort, faSortAmountDown, faSortAmountUp, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useCart } from "../context/CartContext";
+import ImageModal from "../components/ImageModal";
 
 const NewArrivals = () => {
 
@@ -22,6 +23,21 @@ const NewArrivals = () => {
   const [sortOrder, setSortOrder] = useState("none");
   const [visibleCount, setVisibleCount] = useState(30);
   const { addToCart } = useCart();
+  const [modalImages, setModalImages] = useState([]);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+  const handleImageClick = (imgUrlData) => {
+    let parsedImages = [];
+    try {
+      parsedImages = typeof imgUrlData === 'string' && imgUrlData.startsWith('[')
+        ? JSON.parse(imgUrlData)
+        : (imgUrlData ? [imgUrlData] : []);
+    } catch (e) {
+      parsedImages = imgUrlData ? [imgUrlData] : [];
+    }
+    setModalImages(parsedImages);
+    setIsImageModalOpen(true);
+  };
 
   useEffect(() => {
     const fetchProductsAndCategories = async () => {
@@ -235,39 +251,132 @@ const NewArrivals = () => {
 
             <div className="p-5 md:p-8 pb-24 md:pb-8 text-sm md:text-base">
 
-            {/* Shop by Price */}
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold">Shop by Price</h4>
-              <div className="border-t border-gray-300 my-3"></div>
-              <div style={sliderStyle}>
-                <Slider
-                  range
-                  min={0}
-                  max={10000}
-                  value={priceRange}
-                  onChange={handlePriceChange}
-                  railStyle={{
-                    backgroundColor: "grey",
-                    height: "4px",
-                    borderRadius: "2px",
-                    borderColor: "white",
-                  }}
-                  trackStyle={defaultTrackStyle}
-                  handleStyle={{
-                    width: "16px",
-                    height: "16px",
-                    border: "2px solid #0c4a6e",
-                    backgroundColor: "#ffffff",
-                  }}
-                />
-                <div className="flex justify-between mt-2 font-montserrat font-medium text-sky-950">
-                  <span>₹{priceRange[0]}</span>
-                  <span>₹{priceRange[1]}</span>
+              {/* Shop by Price */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold">Shop by Price</h4>
+                <div className="border-t border-gray-300 my-3"></div>
+                <div style={sliderStyle}>
+                  <Slider
+                    range
+                    min={0}
+                    max={10000}
+                    value={priceRange}
+                    onChange={handlePriceChange}
+                    railStyle={{
+                      backgroundColor: "grey",
+                      height: "4px",
+                      borderRadius: "2px",
+                      borderColor: "white",
+                    }}
+                    trackStyle={defaultTrackStyle}
+                    handleStyle={{
+                      width: "16px",
+                      height: "16px",
+                      border: "2px solid #0c4a6e",
+                      backgroundColor: "#ffffff",
+                    }}
+                  />
+                  <div className="flex justify-between mt-2 font-montserrat font-medium text-sky-950">
+                    <span>₹{priceRange[0]}</span>
+                    <span>₹{priceRange[1]}</span>
+                  </div>
+                  <div className="flex items-center mt-2">
+                    <button
+                      className="text-gray-700 mr-2 flex items-center text-sm"
+                      onClick={clearPriceRange}
+                    >
+                      <FontAwesomeIcon
+                        icon={faTimes}
+                        className="h-4 w-4 inline-block mr-1"
+                      />
+                      Clear
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center mt-2">
+              </div>
+
+              {/* Sort by Price Section */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold">Sort by Price</h4>
+                <div className="border-t border-gray-300 my-3"></div>
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="sort-none"
+                      name="sort-price"
+                      checked={sortOrder === "none"}
+                      onChange={() => handleSortChange("none")}
+                      className="mr-2 h-5 w-5"
+                    />
+                    <label htmlFor="sort-none" className="flex items-center text-sm md:text-base">
+                      <FontAwesomeIcon icon={faSort} className="mr-2" />
+                      No Sorting
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="sort-low-to-high"
+                      name="sort-price"
+                      checked={sortOrder === "lowToHigh"}
+                      onChange={() => handleSortChange("lowToHigh")}
+                      className="mr-2 h-5 w-5"
+                    />
+                    <label htmlFor="sort-low-to-high" className="flex items-center text-sm md:text-base">
+                      <FontAwesomeIcon icon={faSortAmountUp} className="mr-2" />
+                      Price: Low to High
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="sort-high-to-low"
+                      name="sort-price"
+                      checked={sortOrder === "highToLow"}
+                      onChange={() => handleSortChange("highToLow")}
+                      className="mr-2 h-5 w-5"
+                    />
+                    <label htmlFor="sort-high-to-low" className="flex items-center text-sm md:text-base">
+                      <FontAwesomeIcon icon={faSortAmountDown} className="mr-2" />
+                      Price: High to Low
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shop by Category */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold">Shop by Category</h4>
+                <div className="border-t border-gray-300 my-3"></div>
+                <div className="mt-2 flex flex-wrap items-center">
+                  {categories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center mb-2 mr-4 font-medium justify-center"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`category-${category.id}`}
+                        value={category.id}
+                        checked={selectedCategory.includes(category.id)}
+                        onChange={() => handleCategoryChange(category.id)}
+                        className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
+                      />
+                      <label htmlFor={`category-${category.id}`} className="text-sm md:text-base">
+                        {category.name}
+                      </label>
+                      <FontAwesomeIcon
+                        icon={faCheck}
+                        className="absolute top-0 left-0 mt-1 ml-1 text-white opacity-0 checked:opacity-100"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center mt-1">
                   <button
-                    className="text-gray-700 mr-2 flex items-center text-sm"
-                    onClick={clearPriceRange}
+                    className="text-gray-700 mr-2 text-sm"
+                    onClick={clearCategoryFilters}
                   >
                     <FontAwesomeIcon
                       icon={faTimes}
@@ -277,177 +386,84 @@ const NewArrivals = () => {
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Sort by Price Section */}
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold">Sort by Price</h4>
-              <div className="border-t border-gray-300 my-3"></div>
-              <div className="flex flex-col gap-2 mt-2">
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="sort-none"
-                    name="sort-price"
-                    checked={sortOrder === "none"}
-                    onChange={() => handleSortChange("none")}
-                    className="mr-2 h-5 w-5"
-                  />
-                  <label htmlFor="sort-none" className="flex items-center text-sm md:text-base">
-                    <FontAwesomeIcon icon={faSort} className="mr-2" />
-                    No Sorting
-                  </label>
+              {/* Shop by Company */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold">Shop by Company</h4>
+                <div className="border-t border-gray-300 my-3"></div>
+                <div className="flex flex-wrap mt-2">
+                  {companies.map((company, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center mb-2 mr-4 font-medium"
+                    >
+                      <input
+                        type="radio"
+                        id={`company-${index}`}
+                        name="company"
+                        value={company.id}
+                        checked={selectedCompany === company.id}
+                        onChange={() => handleCompanyChange(company.id)}
+                        className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
+                      />
+                      <label htmlFor={`company-${index}`} className="text-sm md:text-base">{company.name}</label>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="sort-low-to-high"
-                    name="sort-price"
-                    checked={sortOrder === "lowToHigh"}
-                    onChange={() => handleSortChange("lowToHigh")}
-                    className="mr-2 h-5 w-5"
-                  />
-                  <label htmlFor="sort-low-to-high" className="flex items-center text-sm md:text-base">
-                    <FontAwesomeIcon icon={faSortAmountUp} className="mr-2" />
-                    Price: Low to High
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="sort-high-to-low"
-                    name="sort-price"
-                    checked={sortOrder === "highToLow"}
-                    onChange={() => handleSortChange("highToLow")}
-                    className="mr-2 h-5 w-5"
-                  />
-                  <label htmlFor="sort-high-to-low" className="flex items-center text-sm md:text-base">
-                    <FontAwesomeIcon icon={faSortAmountDown} className="mr-2" />
-                    Price: High to Low
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Shop by Category */}
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold">Shop by Category</h4>
-              <div className="border-t border-gray-300 my-3"></div>
-              <div className="mt-2 flex flex-wrap items-center">
-                {categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center mb-2 mr-4 font-medium justify-center"
+                <div className="flex items-center mt-1">
+                  <button
+                    className="text-gray-700 mr-2 text-sm"
+                    onClick={clearCompanyFilters}
                   >
-                    <input
-                      type="checkbox"
-                      id={`category-${category.id}`}
-                      value={category.id}
-                      checked={selectedCategory.includes(category.id)}
-                      onChange={() => handleCategoryChange(category.id)}
-                      className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
-                    />
-                    <label htmlFor={`category-${category.id}`} className="text-sm md:text-base">
-                      {category.name}
-                    </label>
                     <FontAwesomeIcon
-                      icon={faCheck}
-                      className="absolute top-0 left-0 mt-1 ml-1 text-white opacity-0 checked:opacity-100"
+                      icon={faTimes}
+                      className="h-4 w-4 inline-block mr-1"
                     />
-                  </div>
-                ))}
+                    Clear
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center mt-1">
-                <button
-                  className="text-gray-700 mr-2 text-sm"
-                  onClick={clearCategoryFilters}
-                >
-                  <FontAwesomeIcon
-                    icon={faTimes}
-                    className="h-4 w-4 inline-block mr-1"
-                  />
-                  Clear
-                </button>
-              </div>
-            </div>
 
-            {/* Shop by Company */}
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold">Shop by Company</h4>
-              <div className="border-t border-gray-300 my-3"></div>
-              <div className="flex flex-wrap mt-2">
-                {companies.map((company, index) => (
+              {/* In Stock Only */}
+              <div className="flex items-center mb-8">
+                <input
+                  type="checkbox"
+                  id="inStockOnly"
+                  checked={inStockOnly}
+                  onChange={handleInStockChange}
+                  className="mr-2 h-5 w-5"
+                />
+                <label htmlFor="inStockOnly" className="text-sm md:text-base">In Stock Only</label>
+              </div>
+
+              {/* Clear All Filters Button */}
+              {(selectedCompany !== "" ||
+                selectedCategory.length > 0 ||
+                inStockOnly ||
+                sortOrder !== "none" ||
+                priceRange[0] !== 0 ||
+                priceRange[1] !== 10000) && (
                   <div
-                    key={index}
-                    className="flex items-center mb-2 mr-4 font-medium"
+                    onClick={clearAllFilters}
+                    className="px-4 py-2.5 bg-sky-950 hover:bg-sky-700 text-white rounded-md cursor-pointer flex items-center justify-center text-sm md:text-base font-medium"
                   >
-                    <input
-                      type="radio"
-                      id={`company-${index}`}
-                      name="company"
-                      value={company.id}
-                      checked={selectedCompany === company.id}
-                      onChange={() => handleCompanyChange(company.id)}
-                      className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
-                    />
-                    <label htmlFor={`company-${index}`} className="text-sm md:text-base">{company.name}</label>
+                    <FontAwesomeIcon icon={faTimes} className="h-4 w-4 mr-1.5" />
+                    Clear All Filters
                   </div>
-                ))}
-              </div>
-              <div className="flex items-center mt-1">
-                <button
-                  className="text-gray-700 mr-2 text-sm"
-                  onClick={clearCompanyFilters}
-                >
-                  <FontAwesomeIcon
-                    icon={faTimes}
-                    className="h-4 w-4 inline-block mr-1"
-                  />
-                  Clear
-                </button>
-              </div>
+                )}
+
+              {/* Apply button for mobile */}
+              {showFilters && (
+                <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+                  <button
+                    onClick={toggleFilters}
+                    className="w-full py-3.5 bg-sky-950 text-white rounded-xl font-semibold text-base hover:bg-sky-800 active:scale-[0.98] transition-all"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* In Stock Only */}
-            <div className="flex items-center mb-8">
-              <input
-                type="checkbox"
-                id="inStockOnly"
-                checked={inStockOnly}
-                onChange={handleInStockChange}
-                className="mr-2 h-5 w-5"
-              />
-              <label htmlFor="inStockOnly" className="text-sm md:text-base">In Stock Only</label>
-            </div>
-
-            {/* Clear All Filters Button */}
-            {(selectedCompany !== "" ||
-              selectedCategory.length > 0 ||
-              inStockOnly ||
-              sortOrder !== "none" ||
-              priceRange[0] !== 0 ||
-              priceRange[1] !== 10000) && (
-              <div
-                onClick={clearAllFilters}
-                className="px-4 py-2.5 bg-sky-950 hover:bg-sky-700 text-white rounded-md cursor-pointer flex items-center justify-center text-sm md:text-base font-medium"
-              >
-                <FontAwesomeIcon icon={faTimes} className="h-4 w-4 mr-1.5" />
-                Clear All Filters
-              </div>
-            )}
-
-            {/* Apply button for mobile */}
-            {showFilters && (
-              <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
-                <button
-                  onClick={toggleFilters}
-                  className="w-full py-3.5 bg-sky-950 text-white rounded-xl font-semibold text-base hover:bg-sky-800 active:scale-[0.98] transition-all"
-                >
-                  Apply Filters
-                </button>
-              </div>
-            )}
-          </div>
           </div>
 
           {/* Products Grid Section */}
@@ -463,57 +479,72 @@ const NewArrivals = () => {
               </div>
             ) : visibleProducts.length > 0 ? (
               <Fragment>
-              {visibleProducts.map((product, index) => {
-                return (
-                  <div key={index} className="border border-gray-200 flex flex-col bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden group">
-                    {/* Product image */}
-                    <div className="w-full aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={product.img_url}
-                        alt={product.name}
-                        className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-
-                    {/* Product details */}
-                    <div className="p-3 sm:p-4 flex flex-col flex-grow bg-white">
-                      <h5 className="text-sm md:text-base font-semibold line-clamp-2 min-h-[2.5em] text-slate-800">
-                        {product.name}
-                      </h5>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-slate-500 text-sm font-medium">{product.company}</p>
-                        <p className="text-sky-900 font-bold text-sm md:text-base">
-                          ₹{product.price}
-                        </p>
-                      </div>
-                      <div className="mt-auto pt-3">
-                        {!product.stock ? (
-                          <p className="text-red-500 font-semibold text-sm text-center py-2">
-                            Restocking soon
-                          </p>
-                        ) : (
-                          <button
-                            onClick={() => addToCart(product)}
-                            className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-sm font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm"
-                          >
-                            Add to Cart
-                          </button>
+                {visibleProducts.map((product, index) => {
+                  return (
+                    <div key={index} className="border border-gray-200 flex flex-col bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden group">
+                      {/* Product image */}
+                      <div
+                        className="w-full aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer"
+                        onClick={() => handleImageClick(product.img_url)}
+                        title="Click to view all images"
+                      >
+                        {/* If multiple images, show badge */}
+                        {typeof product.img_url === 'string' && product.img_url.startsWith('[') && (
+                          <div className="absolute top-2 right-2 z-10 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full pointer-events-none">
+                            {(() => {
+                              try { return JSON.parse(product.img_url).length > 1 ? `${JSON.parse(product.img_url).length} Images` : ''; }
+                              catch (e) { return ''; }
+                            })()}
+                          </div>
                         )}
+                        <img
+                          src={(typeof product.img_url === 'string' && product.img_url.startsWith('['))
+                            ? (JSON.parse(product.img_url)[0] || '')
+                            : product.img_url}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+
+                      {/* Product details */}
+                      <div className="p-3 sm:p-4 flex flex-col flex-grow bg-white">
+                        <h5 className="text-sm md:text-base font-semibold line-clamp-2 min-h-[2.5em] text-slate-800">
+                          {product.name}
+                        </h5>
+                        <div className="flex justify-between items-center mt-2">
+                          <p className="text-slate-500 text-sm font-medium">{product.company}</p>
+                          <p className="text-sky-900 font-bold text-sm md:text-base">
+                            ₹{product.price}
+                          </p>
+                        </div>
+                        <div className="mt-auto pt-3">
+                          {!product.stock ? (
+                            <p className="text-red-500 font-semibold text-sm text-center py-2">
+                              Restocking soon
+                            </p>
+                          ) : (
+                            <button
+                              onClick={() => addToCart(product)}
+                              className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-sm font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm"
+                            >
+                              Add to Cart
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+                {hasMore && (
+                  <div className="col-span-2 md:col-span-3 flex justify-center mt-6">
+                    <button
+                      onClick={handleShowMore}
+                      className="bg-sky-950 text-white px-8 py-3 rounded-xl font-semibold text-sm md:text-base hover:bg-sky-800 active:scale-[0.97] transition-all shadow-md"
+                    >
+                      Show More
+                    </button>
                   </div>
-                );
-              })}
-              {hasMore && (
-                <div className="col-span-2 md:col-span-3 flex justify-center mt-6">
-                  <button
-                    onClick={handleShowMore}
-                    className="bg-sky-950 text-white px-8 py-3 rounded-xl font-semibold text-sm md:text-base hover:bg-sky-800 active:scale-[0.97] transition-all shadow-md"
-                  >
-                    Show More
-                  </button>
-                </div>
-              )}
+                )}
               </Fragment>
             ) : (
               <div className="border border-gray-300 p-4 flex justify-center items-center col-span-2 md:col-span-3 rounded-md">
@@ -524,6 +555,12 @@ const NewArrivals = () => {
             )}
           </div>
         </div>
+
+        <ImageModal
+          images={modalImages}
+          isOpen={isImageModalOpen}
+          onClose={() => setIsImageModalOpen(false)}
+        />
       </section>
     </>
   );

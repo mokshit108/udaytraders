@@ -131,7 +131,9 @@ const Cart = () => {
               >
                 <div className="flex items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
                   <img
-                    src={item.img_url}
+                    src={(typeof item.img_url === 'string' && item.img_url.startsWith('['))
+                      ? (JSON.parse(item.img_url)[0] || '')
+                      : item.img_url}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded shadow"
                   />

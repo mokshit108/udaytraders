@@ -19,28 +19,30 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categories, companies }) => {
-  const [productName, setProductName]           = useState("");
+  const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
-  const [productPrice, setProductPrice]         = useState("");
-  const [productStock, setProductStock]         = useState("");
-  const [productCategory, setProductCategory]   = useState("");
-  const [productImageUrl, setProductImageUrl]   = useState("");
-  const [productCompany, setProductCompany]     = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productStock, setProductStock] = useState("");
+  const [productCategory, setProductCategory] = useState("");
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [productMenu, setProductMenu] = useState("");
+  const [productCompany, setProductCompany] = useState("");
+  const [productSeries, setProductSeries] = useState("");
   const [productIsPopular, setProductIsPopular] = useState(false);
-  const [productSeries, setProductSeries]       = useState("");
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
+  const [mainImageIdentifier, setMainImageIdentifier] = useState(null);
 
-  const [imageFile, setImageFile]         = useState(null);
-  const [imagePreview, setImagePreview]   = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragOver, setDragOver]           = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
-  const [error, setError]         = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess]     = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const fileInputRef = useRef(null);
-  const tableName    = "Product";
+  const tableName = "Product";
 
   useEffect(() => {
     if (product && isOpen) {
@@ -49,76 +51,106 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
       setProductPrice(product.price?.toString() || "");
       setProductStock(product.stock?.toString() || "");
       setProductCategory(product.category_name || "");
-      setProductImageUrl(product.img_url || "");
-      setImagePreview(product.img_url || "");
+
+      let parsedImages = [];
+      try {
+        parsedImages = typeof product.img_url === 'string' && product.img_url.startsWith('[')
+          ? JSON.parse(product.img_url)
+          : (product.img_url ? [product.img_url] : []);
+      } catch (e) {
+        parsedImages = product.img_url ? [product.img_url] : [];
+      }
+      setExistingImageUrls(parsedImages);
+      setNewImageFiles([]);
+      setNewImagePreviews([]);
+      setMainImageIdentifier(parsedImages.length > 0 ? parsedImages[0] : null);
+
       setProductCompany(product.company_name || "");
       setProductIsPopular(product.is_popular === 1);
       setProductSeries(product.series || "");
     }
   }, [product, isOpen]);
 
-  const processFile = (file) => {
-    if (!file) return;
+  const processFiles = (files) => {
+    if (!files || files.length === 0) return;
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-    if (!allowed.includes(file.type)) {
-      setError("Only JPEG, PNG, WEBP or GIF images are allowed.");
-      return;
+    const filesList = [];
+    const previews = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!allowed.includes(file.type)) {
+        setError("Only " + allowed.join(", ") + " are allowed.");
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError((prev) => (prev ? prev + "\n" : "") + "An image exceeds 5 MB.");
+        continue;
+      }
+      filesList.push(file);
+      previews.push(URL.createObjectURL(file));
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be smaller than 5 MB.");
-      return;
-    }
+
     setError("");
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setProductImageUrl("");
+    setNewImageFiles((prev) => [...prev, ...filesList]);
+    setNewImagePreviews((prev) => [...prev, ...previews]);
   };
 
-  const handleFileInput = (e) => processFile(e.target.files?.[0]);
+  const handleFileInput = (e) => processFiles(e.target.files);
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    processFile(e.dataTransfer.files?.[0]);
+    processFiles(e.dataTransfer.files);
   };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview("");
-    setProductImageUrl("");
+  const removeExistingImage = (index) => {
+    setExistingImageUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index) => {
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const uploadToCloudinary = async () => {
-    if (!imageFile) return null;
+    if (newImageFiles.length === 0) return [];
     setUploadingImage(true);
     setUploadProgress(10);
-
-    const formData = new FormData();
-    formData.append("image", imageFile);
+    const urls = [];
+    const apiUrl = import.meta.env.VITE_API_URL;
 
     const ticker = setInterval(() => {
-      setUploadProgress((p) => (p < 85 ? p + 10 : p));
-    }, 300);
+      setUploadProgress((p) => (p < 85 ? p + 5 : p));
+    }, 500);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const res = await fetch(`${apiUrl}/upload/image`, {
-        method: "POST",
-        body: formData,
-      });
-      clearInterval(ticker);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Image upload failed.");
+      for (const file of newImageFiles) {
+        const formData = new FormData();
+        formData.append("image", file);
+        const res = await fetch(`${apiUrl}/upload/image`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Image upload failed.");
+        }
+        const data = await res.json();
+        urls.push(data.url);
       }
-      const data = await res.json();
+      clearInterval(ticker);
       setUploadProgress(100);
-      return data.url;
+      return urls;
     } catch (err) {
       clearInterval(ticker);
       throw err;
     } finally {
+      clearInterval(ticker);
       setUploadingImage(false);
     }
   };
@@ -129,12 +161,13 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
     setProductPrice("");
     setProductStock("");
     setProductCategory("");
-    setProductImageUrl("");
+    setExistingImageUrls([]);
     setProductCompany("");
     setProductIsPopular(false);
     setProductSeries("");
-    setImageFile(null);
-    setImagePreview("");
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+    setMainImageIdentifier(null);
     setUploadProgress(0);
     setError("");
     setSuccess(false);
@@ -162,10 +195,26 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
 
     setIsSubmitting(true);
     try {
-      let finalUrl = productImageUrl;
-      if (imageFile) {
-        finalUrl = await uploadToCloudinary();
-        setProductImageUrl(finalUrl);
+      let uploadedUrls = [];
+      if (newImageFiles.length > 0) {
+        uploadedUrls = await uploadToCloudinary();
+      }
+      let finalUrls = [...existingImageUrls, ...uploadedUrls];
+
+      if (mainImageIdentifier) {
+        let targetUrl = null;
+        if (existingImageUrls.includes(mainImageIdentifier)) {
+          targetUrl = mainImageIdentifier;
+        } else {
+          const newIdx = newImagePreviews.indexOf(mainImageIdentifier);
+          if (newIdx !== -1 && uploadedUrls[newIdx]) {
+            targetUrl = uploadedUrls[newIdx];
+          }
+        }
+        if (targetUrl) {
+          finalUrls = finalUrls.filter(u => u !== targetUrl);
+          finalUrls.unshift(targetUrl);
+        }
       }
 
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -173,15 +222,15 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name:          productName,
-          description:   productDescription,
-          price:         parseFloat(productPrice),
-          stock:         productStock !== "" ? parseInt(productStock) : 0,
+          name: productName,
+          description: productDescription,
+          price: parseFloat(productPrice),
+          stock: productStock !== "" ? parseInt(productStock) : 0,
           category_name: productCategory,
-          img_url:       finalUrl,
-          company_name:  productCompany,
-          is_popular:    productIsPopular ? 1 : 0,
-          series:        productSeries,
+          img_url: JSON.stringify(finalUrls),
+          company_name: productCompany,
+          is_popular: productIsPopular ? 1 : 0,
+          series: productSeries,
         }),
       });
 
@@ -245,55 +294,80 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
               <FontAwesomeIcon icon={faImage} /> Product Image
             </p>
 
-            {imagePreview ? (
-              <div className="apm-image-preview-wrap">
-                <img src={imagePreview} alt="Preview" className="apm-preview-img" />
+            {(existingImageUrls.length > 0 || newImagePreviews.length > 0) && (
+              <div className="apm-image-preview-group" style={{ marginBottom: "15px" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {/* Existing Images */}
+                  {existingImageUrls.map((url, idx) => (
+                    <div key={`exist-${idx}`} className="apm-image-preview-wrap" style={{ width: "100px", height: "100px", position: "relative" }}>
+                      <img src={url} alt="Existing Preview" className="apm-preview-img" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
+                      <button type="button" className="apm-remove-img-btn" onClick={() => removeExistingImage(idx)} title="Remove image">
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        type="button"
+                        className="apm-remove-img-btn"
+                        style={{ left: "10px", right: "auto", background: mainImageIdentifier === url ? "#f59e0b" : "rgba(0,0,0,0.5)" }}
+                        onClick={() => setMainImageIdentifier(url)}
+                        title={mainImageIdentifier === url ? "Main Image" : "Set as Main Image"}
+                      >
+                        <FontAwesomeIcon icon={faStar} />
+                      </button>
+                    </div>
+                  ))}
+                  {/* New Images */}
+                  {newImagePreviews.map((preview, idx) => (
+                    <div key={`new-${idx}`} className="apm-image-preview-wrap" style={{ width: "100px", height: "100px", position: "relative" }}>
+                      <img src={preview} alt="New Preview" className="apm-preview-img" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
+                      <button type="button" className="apm-remove-img-btn" onClick={() => removeNewImage(idx)} title="Remove image">
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        type="button"
+                        className="apm-remove-img-btn"
+                        style={{ left: "10px", right: "auto", background: mainImageIdentifier === preview ? "#f59e0b" : "rgba(0,0,0,0.5)" }}
+                        onClick={() => setMainImageIdentifier(preview)}
+                        title={mainImageIdentifier === preview ? "Main Image" : "Set as Main Image"}
+                      >
+                        <FontAwesomeIcon icon={faStar} />
+                      </button>
+                      {/* Badge for new unsaved image */}
+                      <span style={{ position: "absolute", bottom: "4px", right: "4px", background: "rgba(0,0,0,0.6)", color: "white", fontSize: "10px", padding: "2px 4px", borderRadius: "4px" }}>New</span>
+                    </div>
+                  ))}
+                </div>
 
                 {uploadingImage && (
-                  <div className="apm-progress-bar-wrap">
+                  <div className="apm-progress-bar-wrap" style={{ position: "relative", marginTop: "10px", padding: "10px", borderRadius: "8px" }}>
                     <div className="apm-progress-bar" style={{ width: `${uploadProgress}%` }} />
                     <span className="apm-progress-label">
-                      <FontAwesomeIcon icon={faSpinner} spin /> Uploading to Cloudinary…
+                      <FontAwesomeIcon icon={faSpinner} spin /> Uploading new images to Cloudinary…
                     </span>
                   </div>
                 )}
-
-                {productImageUrl && !uploadingImage && (
-                  <div className="apm-uploaded-badge">
-                    <FontAwesomeIcon icon={faCheckCircle} /> Uploaded to Cloudinary
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  className="apm-remove-img-btn"
-                  onClick={removeImage}
-                  title="Remove image"
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </button>
-              </div>
-            ) : (
-              <div
-                className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-              >
-                <div className="apm-dropzone-icon">
-                  <FontAwesomeIcon icon={faCloudUploadAlt} />
-                </div>
-                <p className="apm-dropzone-text">
-                  <strong>Click to upload</strong> or drag &amp; drop
-                </p>
-                <p className="apm-dropzone-hint">JPEG, PNG, WEBP, GIF · Max 5 MB</p>
               </div>
             )}
+
+            <div
+              className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <div className="apm-dropzone-icon">
+                <FontAwesomeIcon icon={faCloudUploadAlt} />
+              </div>
+              <p className="apm-dropzone-text">
+                <strong>Click to upload</strong> or drag &amp; drop
+              </p>
+              <p className="apm-dropzone-hint">Upload multiple standard images · Max 5 MB each</p>
+            </div>
 
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
               style={{ display: "none" }}
               onChange={handleFileInput}

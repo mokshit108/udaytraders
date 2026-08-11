@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       img_url: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
       },
       company_id: {
         type: DataTypes.INTEGER,
