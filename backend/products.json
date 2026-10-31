@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Mosaic Angle Cock",
+    "description": "",
+    "price": 788.99,
+    "stock": 0,
+    "category_id": 1,
+    "img_url": "[\"https://res.cloudinary.com/dvkqmeoav/image/upload/v1793462708/kq6bd3c1c2i7ksowwsom.jpg\",\"https://res.cloudinary.com/dvkqmeoav/image/upload/v1793462718/kx8udu2mhgpolyvrygcd.jpg\"]",
+    "company_id": 3,
+    "is_popular": 0,
+    "series": "Florentine"
+  },
+  {
+    "name": "Mosaic Angle Cock",
+    "description": "",
+    "price": 1466,
+    "stock": 10,
+    "category_id": 1,
+    "img_url": "[\"https://res.cloudinary.com/dvkqmeoav/image/upload/v1793463711/lhhzqocjybgekt7egigd.jpg\",\"https://res.cloudinary.com/dvkqmeoav/image/upload/v1793463710/wgkitlpkinbrpgo9xbkd.jpg\"]",
+    "company_id": 3,
+    "is_popular": 0,
+    "series": "Florentine"
+  }
+]
