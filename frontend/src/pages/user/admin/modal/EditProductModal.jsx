@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTimes,
-  faImage,
   faTag,
   faDollarSign,
   faBoxes,
@@ -13,10 +12,22 @@ import {
   faCheckCircle,
   faExclamationCircle,
   faPencilAlt,
-  faCloudUploadAlt,
-  faTrash,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
+import ProductImageField from "../../../../components/admin/ProductImageField";
+import useImageUpload from "../../../../hooks/useImageUpload";
+
+const parseImageUrls = (value) => {
+  try {
+    if (typeof value === "string" && value.trim().startsWith("[")) {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    }
+    return value ? [value] : [];
+  } catch {
+    return value ? [value] : [];
+  }
+};
 
 const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categories, companies }) => {
   const [productName, setProductName] = useState("");
@@ -24,24 +35,19 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
   const [productPrice, setProductPrice] = useState("");
   const [productStock, setProductStock] = useState("");
   const [productCategory, setProductCategory] = useState("");
-  const [existingImageUrls, setExistingImageUrls] = useState([]);
-  const [newImageFiles, setNewImageFiles] = useState([]);
-  const [productMenu, setProductMenu] = useState("");
   const [productCompany, setProductCompany] = useState("");
   const [productSeries, setProductSeries] = useState("");
   const [productIsPopular, setProductIsPopular] = useState(false);
-  const [newImagePreviews, setNewImagePreviews] = useState([]);
-  const [mainImageIdentifier, setMainImageIdentifier] = useState(null);
 
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragOver, setDragOver] = useState(false);
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
+  const [mainImageKey, setMainImageKey] = useState(null);
+
+  const images = useImageUpload();
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const fileInputRef = useRef(null);
   const tableName = "Product";
 
   useEffect(() => {
@@ -52,107 +58,30 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
       setProductStock(product.stock?.toString() || "");
       setProductCategory(product.category_name || "");
 
-      let parsedImages = [];
-      try {
-        parsedImages = typeof product.img_url === 'string' && product.img_url.startsWith('[')
-          ? JSON.parse(product.img_url)
-          : (product.img_url ? [product.img_url] : []);
-      } catch (e) {
-        parsedImages = product.img_url ? [product.img_url] : [];
-      }
+      const parsedImages = parseImageUrls(product.img_url);
       setExistingImageUrls(parsedImages);
-      setNewImageFiles([]);
-      setNewImagePreviews([]);
-      setMainImageIdentifier(parsedImages.length > 0 ? parsedImages[0] : null);
+      setMainImageKey(parsedImages[0] || null);
 
       setProductCompany(product.company_name || "");
       setProductIsPopular(product.is_popular === 1);
       setProductSeries(product.series || "");
+      setSuccess(false);
+      setError("");
+      images.clear();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, isOpen]);
 
-  const processFiles = (files) => {
-    if (!files || files.length === 0) return;
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-    const filesList = [];
-    const previews = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!allowed.includes(file.type)) {
-        setError("Only " + allowed.join(", ") + " are allowed.");
-        continue;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setError((prev) => (prev ? prev + "\n" : "") + "An image exceeds 5 MB.");
-        continue;
-      }
-      filesList.push(file);
-      previews.push(URL.createObjectURL(file));
-    }
-
-    setError("");
-    setNewImageFiles((prev) => [...prev, ...filesList]);
-    setNewImagePreviews((prev) => [...prev, ...previews]);
+  const handleRemoveExisting = (index) => {
+    const removedUrl = existingImageUrls[index];
+    setExistingImageUrls((previous) => previous.filter((_, i) => i !== index));
+    if (removedUrl === mainImageKey) setMainImageKey(null);
   };
 
-  const handleFileInput = (e) => processFiles(e.target.files);
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    processFiles(e.dataTransfer.files);
-  };
-
-  const removeExistingImage = (index) => {
-    setExistingImageUrls((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const removeNewImage = (index) => {
-    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setNewImagePreviews((prev) => {
-      URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const uploadToCloudinary = async () => {
-    if (newImageFiles.length === 0) return [];
-    setUploadingImage(true);
-    setUploadProgress(10);
-    const urls = [];
-    const apiUrl = import.meta.env.VITE_API_URL;
-
-    const ticker = setInterval(() => {
-      setUploadProgress((p) => (p < 85 ? p + 5 : p));
-    }, 500);
-
-    try {
-      for (const file of newImageFiles) {
-        const formData = new FormData();
-        formData.append("image", file);
-        const res = await fetch(`${apiUrl}/upload/image`, {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || "Image upload failed.");
-        }
-        const data = await res.json();
-        urls.push(data.url);
-      }
-      clearInterval(ticker);
-      setUploadProgress(100);
-      return urls;
-    } catch (err) {
-      clearInterval(ticker);
-      throw err;
-    } finally {
-      clearInterval(ticker);
-      setUploadingImage(false);
-    }
+  const handleRemoveNewImage = (id) => {
+    const removed = images.items.find((item) => item.id === id);
+    images.removeItem(id);
+    if (removed && removed.previewUrl === mainImageKey) setMainImageKey(null);
   };
 
   const resetForm = () => {
@@ -165,13 +94,10 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
     setProductCompany("");
     setProductIsPopular(false);
     setProductSeries("");
-    setNewImageFiles([]);
-    setNewImagePreviews([]);
-    setMainImageIdentifier(null);
-    setUploadProgress(0);
+    setMainImageKey(null);
+    images.clear();
     setError("");
     setSuccess(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleClose = () => { resetForm(); onClose(); };
@@ -195,27 +121,30 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
 
     setIsSubmitting(true);
     try {
-      let uploadedUrls = [];
-      if (newImageFiles.length > 0) {
-        uploadedUrls = await uploadToCloudinary();
+      // 1️⃣ Upload the newly added images before touching the record
+      let newImages = [];
+      if (images.items.length > 0) {
+        const { uploads, failures } = await images.uploadAll();
+        if (failures.length > 0) {
+          const detail =
+            failures.length === 1
+              ? `"${failures[0].name}" could not be uploaded: ${failures[0].error}`
+              : `${failures.length} images could not be uploaded. Retry or remove them before saving.`;
+          setError(detail);
+          return;
+        }
+        newImages = uploads;
       }
-      let finalUrls = [...existingImageUrls, ...uploadedUrls];
 
-      if (mainImageIdentifier) {
-        let targetUrl = null;
-        if (existingImageUrls.includes(mainImageIdentifier)) {
-          targetUrl = mainImageIdentifier;
-        } else {
-          const newIdx = newImagePreviews.indexOf(mainImageIdentifier);
-          if (newIdx !== -1 && uploadedUrls[newIdx]) {
-            targetUrl = uploadedUrls[newIdx];
-          }
-        }
-        if (targetUrl) {
-          finalUrls = finalUrls.filter(u => u !== targetUrl);
-          finalUrls.unshift(targetUrl);
-        }
-      }
+      // 2️⃣ Saved images first, then the ones just uploaded, main image first
+      const combined = [
+        ...existingImageUrls.map((url) => ({ key: url, url })),
+        ...newImages.map((entry) => ({ key: entry.previewUrl, url: entry.url })),
+      ];
+      const mainIndex = mainImageKey
+        ? combined.findIndex((entry) => entry.key === mainImageKey)
+        : -1;
+      if (mainIndex > 0) combined.unshift(...combined.splice(mainIndex, 1));
 
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await fetch(`${apiUrl}/profile/admin/crud/${tableName}/${product.id}`, {
@@ -227,7 +156,7 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
           price: parseFloat(productPrice),
           stock: productStock !== "" ? parseInt(productStock) : 0,
           category_name: productCategory,
-          img_url: JSON.stringify(finalUrls),
+          img_url: JSON.stringify(combined.map((entry) => entry.url)),
           company_name: productCompany,
           is_popular: productIsPopular ? 1 : 0,
           series: productSeries,
@@ -236,7 +165,11 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Error: ${response.statusText}`);
+        throw new Error(
+          errData.error ||
+            errData.message ||
+            `Error: ${response.statusText || response.status}`
+        );
       }
 
       setSuccess(true);
@@ -288,91 +221,20 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
 
         <form onSubmit={handleSubmit} className="apm-form">
 
-          {/* Image Upload Zone */}
-          <div className="apm-image-section">
-            <p className="apm-section-label">
-              <FontAwesomeIcon icon={faImage} /> Product Image
-            </p>
-
-            {(existingImageUrls.length > 0 || newImagePreviews.length > 0) && (
-              <div className="apm-image-preview-group" style={{ marginBottom: "15px" }}>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  {/* Existing Images */}
-                  {existingImageUrls.map((url, idx) => (
-                    <div key={`exist-${idx}`} className="apm-image-preview-wrap" style={{ width: "100px", height: "100px", position: "relative" }}>
-                      <img src={url} alt="Existing Preview" className="apm-preview-img" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
-                      <button type="button" className="apm-remove-img-btn" onClick={() => removeExistingImage(idx)} title="Remove image">
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                      <button
-                        type="button"
-                        className="apm-remove-img-btn"
-                        style={{ left: "10px", right: "auto", background: mainImageIdentifier === url ? "#f59e0b" : "rgba(0,0,0,0.5)" }}
-                        onClick={() => setMainImageIdentifier(url)}
-                        title={mainImageIdentifier === url ? "Main Image" : "Set as Main Image"}
-                      >
-                        <FontAwesomeIcon icon={faStar} />
-                      </button>
-                    </div>
-                  ))}
-                  {/* New Images */}
-                  {newImagePreviews.map((preview, idx) => (
-                    <div key={`new-${idx}`} className="apm-image-preview-wrap" style={{ width: "100px", height: "100px", position: "relative" }}>
-                      <img src={preview} alt="New Preview" className="apm-preview-img" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
-                      <button type="button" className="apm-remove-img-btn" onClick={() => removeNewImage(idx)} title="Remove image">
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                      <button
-                        type="button"
-                        className="apm-remove-img-btn"
-                        style={{ left: "10px", right: "auto", background: mainImageIdentifier === preview ? "#f59e0b" : "rgba(0,0,0,0.5)" }}
-                        onClick={() => setMainImageIdentifier(preview)}
-                        title={mainImageIdentifier === preview ? "Main Image" : "Set as Main Image"}
-                      >
-                        <FontAwesomeIcon icon={faStar} />
-                      </button>
-                      {/* Badge for new unsaved image */}
-                      <span style={{ position: "absolute", bottom: "4px", right: "4px", background: "rgba(0,0,0,0.6)", color: "white", fontSize: "10px", padding: "2px 4px", borderRadius: "4px" }}>New</span>
-                    </div>
-                  ))}
-                </div>
-
-                {uploadingImage && (
-                  <div className="apm-progress-bar-wrap" style={{ position: "relative", marginTop: "10px", padding: "10px", borderRadius: "8px" }}>
-                    <div className="apm-progress-bar" style={{ width: `${uploadProgress}%` }} />
-                    <span className="apm-progress-label">
-                      <FontAwesomeIcon icon={faSpinner} spin /> Uploading new images to Cloudinary…
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div
-              className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-            >
-              <div className="apm-dropzone-icon">
-                <FontAwesomeIcon icon={faCloudUploadAlt} />
-              </div>
-              <p className="apm-dropzone-text">
-                <strong>Click to upload</strong> or drag &amp; drop
-              </p>
-              <p className="apm-dropzone-hint">Upload multiple standard images · Max 5 MB each</p>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-              style={{ display: "none" }}
-              onChange={handleFileInput}
-            />
-          </div>
+          {/* Images */}
+          <ProductImageField
+            items={images.items}
+            rejections={images.rejections}
+            existingUrls={existingImageUrls}
+            mainImageKey={mainImageKey}
+            onMainImageChange={setMainImageKey}
+            onAddFiles={images.addFiles}
+            onRemoveItem={handleRemoveNewImage}
+            onRetryItem={images.retryItem}
+            onRemoveExisting={handleRemoveExisting}
+            onRemoveRejection={images.removeRejection}
+            disabled={isSubmitting || success}
+          />
 
           {/* Two-column grid */}
           <div className="apm-grid">
@@ -518,10 +380,10 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
             <button
               type="submit"
               className="apm-btn apm-btn--submit"
-              disabled={isSubmitting || uploadingImage || success}
+              disabled={isSubmitting || images.isUploading || success}
             >
-              {uploadingImage ? (
-                <><FontAwesomeIcon icon={faSpinner} spin /> Uploading…</>
+              {images.isUploading ? (
+                <><FontAwesomeIcon icon={faSpinner} spin /> Uploading image…</>
               ) : isSubmitting ? (
                 <><span className="apm-spinner" /> Saving…</>
               ) : success ? (
@@ -583,78 +445,12 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
           padding:11px 20px; font-size:13px; font-weight:500;
           margin:14px 26px 0; border-radius:10px;
         }
+        .apm-alert span { white-space: pre-line; }
         .apm-alert--error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
         .apm-alert--success { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
 
         /* Form */
         .apm-form { padding: 20px 26px 26px; }
-        .apm-section-label {
-          font-size:12.5px; font-weight:600; color:#475569;
-          display:flex; align-items:center; gap:6px; margin-bottom:10px;
-        }
-
-        /* Image section */
-        .apm-image-section { margin-bottom: 20px; }
-
-        /* Drop zone */
-        .apm-dropzone {
-          border: 2px dashed #cbd5e1; border-radius: 14px;
-          padding: 32px 20px; text-align: center;
-          cursor: pointer; transition: all .2s;
-          background: #f8fafc;
-        }
-        .apm-dropzone:hover, .apm-dropzone--active {
-          border-color: #0284c7; background: #eff8ff;
-        }
-        .apm-dropzone-icon {
-          font-size: 36px; color: #94a3b8; margin-bottom: 10px;
-          transition: .2s;
-        }
-        .apm-dropzone:hover .apm-dropzone-icon,
-        .apm-dropzone--active .apm-dropzone-icon { color: #0284c7; }
-        .apm-dropzone-text  { font-size:14px; color:#475569; margin:0 0 4px; }
-        .apm-dropzone-hint  { font-size:11.5px; color:#94a3b8; margin:0; }
-
-        /* Preview */
-        .apm-image-preview-wrap {
-          position: relative; border-radius: 14px; overflow: hidden;
-          border: 2px solid #e2e8f0; background: #f8fafc;
-        }
-        .apm-preview-img {
-          width: 100%; max-height: 200px; object-fit: cover; display: block;
-        }
-        .apm-remove-img-btn {
-          position: absolute; top: 10px; right: 10px;
-          background: rgba(220,38,38,0.9); color: #fff;
-          border: none; border-radius: 8px; width: 32px; height: 32px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; font-size: 13px; transition: .2s;
-        }
-        .apm-remove-img-btn:hover { background: #dc2626; transform: scale(1.08); }
-
-        /* Progress bar */
-        .apm-progress-bar-wrap {
-          padding: 10px 14px;
-          background: rgba(0,0,0,0.55);
-          position: absolute; bottom: 0; left: 0; right: 0;
-        }
-        .apm-progress-bar {
-          height: 4px; background: #38bdf8; border-radius: 999px;
-          transition: width .3s ease;
-        }
-        .apm-progress-label {
-          font-size: 11px; color: #fff; margin-top: 4px;
-          display: flex; align-items: center; gap: 6px;
-        }
-
-        /* Uploaded badge */
-        .apm-uploaded-badge {
-          position: absolute; bottom: 10px; left: 10px;
-          background: rgba(22,163,74,0.9); color: #fff;
-          font-size: 11.5px; font-weight: 600;
-          padding: 4px 10px; border-radius: 20px;
-          display: flex; align-items: center; gap: 5px;
-        }
 
         /* Grid */
         .apm-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -746,7 +542,6 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product, categori
           .apm-header, .apm-form { padding-left:16px; padding-right:16px; }
           .apm-footer { flex-direction: column-reverse; gap:10px; padding: 0 16px 20px; }
           .apm-btn { width:100%; justify-content:center; padding:12px 22px; }
-          .apm-dropzone { padding:20px 14px; }
           .apm-alert { margin-left:16px; margin-right:16px; }
         }
       `}</style>

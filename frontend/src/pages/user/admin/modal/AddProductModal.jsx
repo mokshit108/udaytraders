@@ -1,8 +1,7 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTimes,
-  faImage,
   faTag,
   faDollarSign,
   faBoxes,
@@ -13,10 +12,10 @@ import {
   faCheckCircle,
   faExclamationCircle,
   faPlus,
-  faCloudUploadAlt,
-  faTrash,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
+import ProductImageField from "../../../../components/admin/ProductImageField";
+import useImageUpload from "../../../../hooks/useImageUpload";
 
 const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companies }) => {
   const [productName, setProductName] = useState("");
@@ -24,111 +23,38 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
   const [productPrice, setProductPrice] = useState("");
   const [productStock, setProductStock] = useState("");
   const [productCategory, setProductCategory] = useState("");
-  const [productImageUrls, setProductImageUrls] = useState([]); // final Cloudinary URLs
   const [productCompany, setProductCompany] = useState("");
   const [productSeries, setProductSeries] = useState("");
   const [productIsPopular, setProductIsPopular] = useState(false);
+  const [mainImageKey, setMainImageKey] = useState(null);
 
-  const [imageFiles, setImageFiles] = useState([]);   // selected File objects
-  const [imagePreviews, setImagePreviews] = useState([]);     // local blob URLs for preview
-  const [mainImageIdentifier, setMainImageIdentifier] = useState(null);
-
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);    // 0-100 fake progress
-  const [dragOver, setDragOver] = useState(false);
+  const images = useImageUpload();
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const fileInputRef = useRef(null);
   const tableName = "Product";
 
   /* ──────────────────────────────────────────────
-     Image helpers
+     Image handlers
   ────────────────────────────────────────────── */
-  const processFiles = (files) => {
-    if (!files || files.length === 0) return;
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-    const newFiles = [];
-    const newPreviews = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!allowed.includes(file.type)) {
-        setError("Only " + allowed.join(", ") + " are allowed.");
-        continue;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setError((prev) => (prev ? prev + "\n" : "") + "An image exceeds 5 MB.");
-        continue;
-      }
-      newFiles.push(file);
-      newPreviews.push(URL.createObjectURL(file));
-    }
-
-    setError("");
-    setImageFiles((prev) => [...prev, ...newFiles]);
-    setImagePreviews((prev) => [...prev, ...newPreviews]);
-    setProductImageUrls([]);
+  const handleRemoveImage = (id) => {
+    const removed = images.items.find((item) => item.id === id);
+    images.removeItem(id);
+    if (removed && removed.previewUrl === mainImageKey) setMainImageKey(null);
   };
 
-  const handleFileInput = (e) => processFiles(e.target.files);
+  /** Collects the uploaded URLs, keeping the chosen main image first. */
+  const collectImageUrls = async () => {
+    if (images.items.length === 0) return { urls: [], failures: [] };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    processFiles(e.dataTransfer.files);
-  };
+    const { uploads, failures } = await images.uploadAll();
+    const ordered = [...uploads];
+    const mainIndex = ordered.findIndex((entry) => entry.previewUrl === mainImageKey);
+    if (mainIndex > 0) ordered.unshift(...ordered.splice(mainIndex, 1));
 
-  const removeImage = (index) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => {
-      URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
-    setProductImageUrls([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  /* Upload selected files to Cloudinary via backend */
-  const uploadToCloudinary = async () => {
-    if (imageFiles.length === 0) return [];
-    setUploadingImage(true);
-    setUploadProgress(10);
-    const urls = [];
-    const apiUrl = import.meta.env.VITE_API_URL;
-
-    // Fake progress ticks
-    const ticker = setInterval(() => {
-      setUploadProgress((p) => (p < 85 ? p + 5 : p));
-    }, 500);
-
-    try {
-      for (const file of imageFiles) {
-        const formData = new FormData();
-        formData.append("image", file);
-        const res = await fetch(`${apiUrl}/upload/image`, {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || "Image upload failed.");
-        }
-        const data = await res.json();
-        urls.push(data.url);
-      }
-      clearInterval(ticker);
-      setUploadProgress(100);
-      return urls;
-    } catch (err) {
-      clearInterval(ticker);
-      throw err;
-    } finally {
-      clearInterval(ticker);
-      setUploadingImage(false);
-    }
+    return { urls: ordered.map((entry) => entry.url), failures };
   };
 
   /* ──────────────────────────────────────────────
@@ -140,17 +66,13 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
     setProductPrice("");
     setProductStock("");
     setProductCategory("");
-    setProductImageUrls([]);
     setProductCompany("");
     setProductIsPopular(false);
     setProductSeries("");
-    setImageFiles([]);
-    setImagePreviews([]);
-    setMainImageIdentifier(null);
-    setUploadProgress(0);
+    setMainImageKey(null);
+    images.clear();
     setError("");
     setSuccess(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleClose = () => { resetForm(); onClose(); };
@@ -174,22 +96,15 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
 
     setIsSubmitting(true);
     try {
-      // 1️⃣ Upload image first if a file was selected
-      let finalUrls = productImageUrls;
-      if (imageFiles.length > 0 && finalUrls.length === 0) {
-        let uploadedUrls = await uploadToCloudinary();
-
-        if (mainImageIdentifier) {
-          const newIdx = imagePreviews.indexOf(mainImageIdentifier);
-          if (newIdx !== -1 && uploadedUrls[newIdx]) {
-            const targetUrl = uploadedUrls[newIdx];
-            uploadedUrls = uploadedUrls.filter(u => u !== targetUrl);
-            uploadedUrls.unshift(targetUrl);
-          }
-        }
-
-        finalUrls = uploadedUrls;
-        setProductImageUrls(finalUrls);
+      // 1️⃣ Upload the selected images first — never save a product with a half-finished upload
+      const { urls: imageUrls, failures } = await collectImageUrls();
+      if (failures.length > 0) {
+        const detail =
+          failures.length === 1
+            ? `"${failures[0].name}" could not be uploaded: ${failures[0].error}`
+            : `${failures.length} images could not be uploaded. Retry or remove them before saving.`;
+        setError(detail);
+        return;
       }
 
       // 2️⃣ Save product to DB
@@ -203,7 +118,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
           price: parseFloat(productPrice),
           stock: productStock !== "" ? parseInt(productStock) : 0,
           category_name: productCategory,
-          img_url: JSON.stringify(finalUrls),
+          img_url: JSON.stringify(imageUrls),
           company_name: productCompany,
           is_popular: productIsPopular ? 1 : 0,
           series: productSeries,
@@ -212,7 +127,11 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Error: ${response.statusText}`);
+        throw new Error(
+          errData.error ||
+            errData.message ||
+            `Error: ${response.statusText || response.status}`
+        );
       }
 
       setSuccess(true);
@@ -267,81 +186,18 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
 
         <form onSubmit={handleSubmit} className="apm-form">
 
-          {/* ── Image Upload Zone ── */}
-          <div className="apm-image-section">
-            <p className="apm-section-label">
-              <FontAwesomeIcon icon={faImage} /> Product Image
-            </p>
-
-            {/* Preview (shown after file chosen) */}
-            {imagePreviews.length > 0 && (
-              <div className="apm-image-preview-group" style={{ marginBottom: "15px" }}>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  {imagePreviews.map((preview, idx) => (
-                    <div key={idx} className="apm-image-preview-wrap" style={{ width: "100px", height: "100px", position: "relative" }}>
-                      <img src={preview} alt="Preview" className="apm-preview-img" style={{ height: "100%", width: "100%" }} />
-                      <button type="button" className="apm-remove-img-btn" onClick={() => removeImage(idx)} title="Remove image">
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                      <button
-                        type="button"
-                        className="apm-remove-img-btn"
-                        style={{ left: "10px", right: "auto", background: (mainImageIdentifier === preview || (idx === 0 && !mainImageIdentifier)) ? "#f59e0b" : "rgba(0,0,0,0.5)" }}
-                        onClick={() => setMainImageIdentifier(preview)}
-                        title={mainImageIdentifier === preview ? "Main Image" : "Set as Main Image"}
-                      >
-                        <FontAwesomeIcon icon={faStar} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Upload progress bar */}
-                {uploadingImage && (
-                  <div className="apm-progress-bar-wrap" style={{ position: "relative", marginTop: "10px", padding: "10px", borderRadius: "8px" }}>
-                    <div className="apm-progress-bar" style={{ width: `${uploadProgress}%` }} />
-                    <span className="apm-progress-label">
-                      <FontAwesomeIcon icon={faSpinner} spin /> Uploading to Cloudinary…
-                    </span>
-                  </div>
-                )}
-
-                {/* Uploaded badge */}
-                {productImageUrls.length > 0 && !uploadingImage && (
-                  <div className="apm-uploaded-badge" style={{ position: "relative", marginTop: "10px", display: "inline-flex" }}>
-                    <FontAwesomeIcon icon={faCheckCircle} /> Uploaded to Cloudinary
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Drag-and-drop zone always visible */}
-            <div
-              className={`apm-dropzone ${dragOver ? "apm-dropzone--active" : ""}`}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-            >
-              <div className="apm-dropzone-icon">
-                <FontAwesomeIcon icon={faCloudUploadAlt} />
-              </div>
-              <p className="apm-dropzone-text">
-                <strong>Click to upload</strong> or drag &amp; drop
-              </p>
-              <p className="apm-dropzone-hint">Upload multiple standard images · Max 5 MB each</p>
-            </div>
-
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-              style={{ display: "none" }}
-              onChange={handleFileInput}
-            />
-          </div>
+          {/* ── Images ── */}
+          <ProductImageField
+            items={images.items}
+            rejections={images.rejections}
+            mainImageKey={mainImageKey}
+            onMainImageChange={setMainImageKey}
+            onAddFiles={images.addFiles}
+            onRemoveItem={handleRemoveImage}
+            onRetryItem={images.retryItem}
+            onRemoveRejection={images.removeRejection}
+            disabled={isSubmitting || success}
+          />
 
           {/* ── Two-column grid ── */}
           <div className="apm-grid">
@@ -495,10 +351,10 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
             <button
               type="submit"
               className="apm-btn apm-btn--submit"
-              disabled={isSubmitting || uploadingImage || success}
+              disabled={isSubmitting || images.isUploading || success}
             >
-              {uploadingImage ? (
-                <><FontAwesomeIcon icon={faSpinner} spin /> Uploading…</>
+              {images.isUploading ? (
+                <><FontAwesomeIcon icon={faSpinner} spin /> Uploading image…</>
               ) : isSubmitting ? (
                 <><span className="apm-spinner" /> Saving…</>
               ) : success ? (
@@ -560,78 +416,12 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
           padding:11px 20px; font-size:13px; font-weight:500;
           margin:14px 26px 0; border-radius:10px;
         }
+        .apm-alert span { white-space: pre-line; }
         .apm-alert--error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
         .apm-alert--success { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
 
         /* Form */
         .apm-form { padding: 20px 26px 26px; }
-        .apm-section-label {
-          font-size:12.5px; font-weight:600; color:#475569;
-          display:flex; align-items:center; gap:6px; margin-bottom:10px;
-        }
-
-        /* Image section */
-        .apm-image-section { margin-bottom: 20px; }
-
-        /* Drop zone */
-        .apm-dropzone {
-          border: 2px dashed #cbd5e1; border-radius: 14px;
-          padding: 32px 20px; text-align: center;
-          cursor: pointer; transition: all .2s;
-          background: #f8fafc;
-        }
-        .apm-dropzone:hover, .apm-dropzone--active {
-          border-color: #0284c7; background: #eff8ff;
-        }
-        .apm-dropzone-icon {
-          font-size: 36px; color: #94a3b8; margin-bottom: 10px;
-          transition: .2s;
-        }
-        .apm-dropzone:hover .apm-dropzone-icon,
-        .apm-dropzone--active .apm-dropzone-icon { color: #0284c7; }
-        .apm-dropzone-text  { font-size:14px; color:#475569; margin:0 0 4px; }
-        .apm-dropzone-hint  { font-size:11.5px; color:#94a3b8; margin:0; }
-
-        /* Preview */
-        .apm-image-preview-wrap {
-          position: relative; border-radius: 14px; overflow: hidden;
-          border: 2px solid #e2e8f0; background: #f8fafc;
-        }
-        .apm-preview-img {
-          width: 100%; max-height: 200px; object-fit: cover; display: block;
-        }
-        .apm-remove-img-btn {
-          position: absolute; top: 10px; right: 10px;
-          background: rgba(220,38,38,0.9); color: #fff;
-          border: none; border-radius: 8px; width: 32px; height: 32px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; font-size: 13px; transition: .2s;
-        }
-        .apm-remove-img-btn:hover { background: #dc2626; transform: scale(1.08); }
-
-        /* Progress bar */
-        .apm-progress-bar-wrap {
-          padding: 10px 14px;
-          background: rgba(0,0,0,0.55);
-          position: absolute; bottom: 0; left: 0; right: 0;
-        }
-        .apm-progress-bar {
-          height: 4px; background: #38bdf8; border-radius: 999px;
-          transition: width .3s ease;
-        }
-        .apm-progress-label {
-          font-size: 11px; color: #fff; margin-top: 4px;
-          display: flex; align-items: center; gap: 6px;
-        }
-
-        /* Uploaded badge */
-        .apm-uploaded-badge {
-          position: absolute; bottom: 10px; left: 10px;
-          background: rgba(22,163,74,0.9); color: #fff;
-          font-size: 11.5px; font-weight: 600;
-          padding: 4px 10px; border-radius: 20px;
-          display: flex; align-items: center; gap: 5px;
-        }
 
         /* Grid */
         .apm-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -723,7 +513,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded, categories, companie
           .apm-header, .apm-form { padding-left:16px; padding-right:16px; }
           .apm-footer { flex-direction: column-reverse; gap:10px; padding: 0 16px 20px; }
           .apm-btn { width:100%; justify-content:center; padding:12px 22px; }
-          .apm-dropzone { padding:20px 14px; }
           .apm-alert { margin-left:16px; margin-right:16px; }
         }
       `}</style>

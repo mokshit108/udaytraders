@@ -8,6 +8,8 @@ import {
   faUpload,
   faExclamationTriangle,
   faInfoCircle,
+  faCheck,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState, useRef } from "react";
 import AddProductModal from "./modal/AddProductModal"; // Import the modal component
@@ -39,13 +41,6 @@ const AllProducts = () => {
   const tableName = "Product"; // Set the table name
 
   const databasetableName = "products";
-
-  // Function to show alert
-  const showAlert = (type, message) => {
-    setAlertInfo({ type, message });
-    // Auto hide alert after 5 seconds
-    setTimeout(() => setAlertInfo(null), 5000);
-  };
 
   const handleImportClick = () => {
     setImportError(null);

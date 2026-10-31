@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Link } from "react-router-dom";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
@@ -58,8 +58,14 @@ const NewArrivals = () => {
 
         // Check if data is in the expected format
         if (Array.isArray(data.products)) {
-          setProducts(data.products);
-          setInStockOnly([...new Set(data.products.map((item) => item.stock))]);
+          // Newest first, so "New Arrivals" leads with the latest products
+          const newestFirst = [...data.products].sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            if (bTime !== aTime) return bTime - aTime;
+            return (b.id ?? 0) - (a.id ?? 0);
+          });
+          setProducts(newestFirst);
         } else {
           console.error("Products data is not an array:", data.products);
           setErrorMessage("Error: Products data is invalid.");
