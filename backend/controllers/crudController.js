@@ -1,5 +1,5 @@
 const models = require('../models'); // Import all Sequelize models
-const { Role, Category , Company } = require("../models");
+const { Role, Category , Company, OrderItem } = require("../models");
 const getModel = (tableName) => {
   return models[tableName];
 };
@@ -202,7 +202,22 @@ const crudController = {
       if (!record) {
         return res.status(404).json({ message: "Record not found" });
       }
-      await record.destroy();
+
+      const transaction = await models.sequelize.transaction();
+      try {
+        if (table.toLowerCase() === "product") {
+          await OrderItem.destroy({
+            where: { product_id: record.id },
+            transaction,
+          });
+        }
+        await record.destroy({ transaction });
+        await transaction.commit();
+      } catch (error) {
+        await transaction.rollback();
+        throw error;
+      }
+
       return res.status(200).json({ message: "Record deleted successfully" });
     } catch (error) {
       return res.status(500).json({ message: error.message });
