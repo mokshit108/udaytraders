@@ -1,30 +1,32 @@
-
-
-import React, { useState } from 'react';
-import ImageModal from './ImageModal';
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
+import ImageModal from "./ImageModal";
+import { useCart } from "../context/CartContext";
 
 const PopularProductCard = ({ img_url, name, price, product, stock }) => {
-  const isLongName = name.length > 20;
-
+  const { addToCart } = useCart();
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const handleImageClick = () => {
-    setIsImageModalOpen(true);
-  };
+
+  const productName = name || "";
+  const isLongName = productName.length > 20;
 
   let parsedImages = [];
   try {
-    parsedImages = typeof img_url === 'string' && img_url.startsWith('[')
+    parsedImages = typeof img_url === "string" && img_url.startsWith("[")
       ? JSON.parse(img_url)
-      : (img_url ? [img_url] : []);
-  } catch (e) {
+      : img_url
+        ? [img_url]
+        : [];
+  } catch {
     parsedImages = img_url ? [img_url] : [];
   }
 
   return (
-    <div className="flex flex-1 flex-col w-full h-full p-4 sm:p-5 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-xl transition-shadow duration-300 group">
+    <div className="flex flex-col w-full h-full p-4 sm:p-5 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-xl transition-shadow duration-300 group">
       <div
         className="w-full aspect-square bg-gray-50 flex items-center justify-center rounded-lg overflow-hidden mb-4 relative cursor-pointer"
-        onClick={handleImageClick}
+        onClick={() => setIsImageModalOpen(true)}
         title="Click to view all images"
       >
         {parsedImages.length > 1 && (
@@ -33,35 +35,41 @@ const PopularProductCard = ({ img_url, name, price, product, stock }) => {
           </div>
         )}
         <img
-          src={parsedImages[0] || ''}
-          alt={name}
+          src={parsedImages[0] || ""}
+          alt={productName}
           className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
         />
       </div>
 
       <div className="flex flex-col flex-grow justify-between">
         <h3
-          className={` ${isLongName ? "text-lg md:text-xl" : "text-xl md:text-2xl"
+          className={`${isLongName ? "text-lg md:text-xl" : "text-xl md:text-2xl"
             } leading-snug font-semibold font-palanquin text-slate-800 mb-2 line-clamp-2`}
         >
-          {name}
+          {productName}
         </h3>
 
         <div className="mt-auto">
           <p className="font-bold font-montserrat text-sky-900 text-lg md:text-xl mb-2">
-            ₹{Math.floor(price)}
+            ₹{Math.floor(Number(price) || 0)}
           </p>
           {!stock ? (
             <div className="w-full text-center bg-red-50 text-red-500 py-2 sm:py-2.5 rounded-lg text-sm sm:text-base font-semibold">
               Restocking soon
             </div>
           ) : (
-            <button className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-sm sm:text-base font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2">
-              View Details
+            <button
+              type="button"
+              onClick={() => addToCart(product)}
+              className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-sm sm:text-base font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <FontAwesomeIcon icon={faCartPlus} />
+              Add to Cart
             </button>
           )}
         </div>
       </div>
+
       <ImageModal
         images={parsedImages}
         isOpen={isImageModalOpen}

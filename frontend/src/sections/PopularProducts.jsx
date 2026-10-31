@@ -1,15 +1,20 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import PopularProductCard from "../components/PopularProductCard";
 
+const MAX_HOME_PRODUCTS = 8;
+
+const skeletons = [0, 1, 2, 3];
+
 const PopularProducts = () => {
-  const containerRef = useRef(null);
-  const [scrollable, setScrollable] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [cardsToShow, setCardsToShow] = useState(1);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchProducts = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL;
@@ -18,193 +23,76 @@ const PopularProducts = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        if (Array.isArray(data.rows)) {
-          setProducts(data.rows);
-        } else {
-          console.error("Unexpected response format:", data);
-          setProducts([]);
+        const rows = Array.isArray(data) ? data : data.rows;
+        if (!cancelled) {
+          setProducts(Array.isArray(rows) ? rows : []);
         }
       } catch (error) {
         console.error("Error fetching popular products:", error);
+        if (!cancelled) setProducts([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchProducts();
-
-    const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setCardsToShow(1);
-      } else if (window.innerWidth < 768) {
-        setCardsToShow(2);
-      } else if (window.innerWidth <= 1024) {
-        setCardsToShow(3);
-      } else {
-        setCardsToShow(4);
-      }
+    return () => {
+      cancelled = true;
     };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    updateScrollability();
-  }, [products, cardsToShow]);
-
-  const updateScrollability = () => {
-    if (containerRef.current) {
-      const canScroll = products.length > cardsToShow;
-      setScrollable(canScroll);
-      if (!canScroll && currentIndex !== 0) {
-        setCurrentIndex(0);
-      }
-    }
-  };
-
-  const scrollLeft = () => {
-    const newIndex = Math.max(currentIndex - 1, 0);
-    setCurrentIndex(newIndex);
-  };
-
-  const scrollRight = () => {
-    const newIndex = Math.min(currentIndex + 1, products.length - cardsToShow);
-    setCurrentIndex(newIndex);
-  };
+  // Nothing flagged as popular in the dashboard yet — keep the home page clean
+  if (!loading && products.length === 0) return null;
 
   return (
-    <section id="products" className="max-container w-full">
-      <div className="flex flex-col justify-start gap-2">
-        <h2 className="font-palanquin text-2.5xl md:text-3.5xl lg:text-3xl xl:text-4xl font-bold text-start max-md:mx-3 lg:p-2">
-          Our <span className="text-sky-700"> Popular </span> Products
-        </h2>
-        <p className="md:text-xl text-start font-montserrat font-medium text-gray-500 text-md w-full content-fit leading-7 max-md:mx-3 lg:p-2">
-          We believe in offering the best products that are driven by innovation
-          and exceptional design.
-        </p>
-      </div>
-      <div className="mt-8 relative">
-        <div
-          ref={containerRef}
-          className="flex space-x-4 pb-4 overflow-x-auto"
-          style={{
-            display: "flex",
-            justifyContent: cardsToShow === 1 ? "center" : "flex-start",
-            scrollSnapType: cardsToShow === 1 ? "x mandatory" : "none",
-            overflowX: "auto",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          {products
-            .slice(currentIndex, currentIndex + cardsToShow)
-            .map((product) => (
-              <div
-                key={product.id}
-                style={{
-                  scrollSnapAlign: cardsToShow === 1 ? "center" : "start",
-                }}
-              >
-                <PopularProductCard
-                  img_url={product.img_url}
-                  name={product.name}
-                  price={product.price}
-                  product={product}
-                  stock={product.stock}
-                />
-              </div>
-            ))}
+    <section
+      id="popular-products"
+      className="max-container w-full px-4 sm:px-8 md:px-16 pt-10 md:pt-14 pb-14"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="font-palanquin text-2.5xl md:text-3xl xl:text-4xl font-bold text-sky-950">
+            Our <span className="text-sky-700">Popular</span> Products
+          </h2>
+          <p className="mt-2 max-w-2xl font-montserrat text-sm md:text-base font-medium text-slate-500 leading-7">
+            We believe in offering the best products that are driven by innovation
+            and exceptional design.
+          </p>
         </div>
 
-        {scrollable && (
-          <div className="flex justify-center items-center space-x-6 mt-6">
-            <button
-              onClick={scrollLeft}
-              disabled={currentIndex === 0}
-              className={`
-                max-md:w-9 max-md:h-9
-                group relative w-12 h-12
-                border-2 border-sky-950
-                flex items-center justify-center
-                transition-all duration-300 ease-in-out
-                ${
-                  currentIndex === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-sky-950"
-                }
-              `}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className={`
-                  max-md:w-6 max-md:h-6
-                  w-8 h-8
-                  ${
-                    currentIndex === 0
-                      ? "text-gray-400"
-                      : "text-sky-950 group-hover:text-white"
-                  }
-                `}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5 8.25 12l7.5-7.5"
-                />
-              </svg>
-            </button>
-
-            <span className="text-gray-700 text-lg font-semibold">
-              {currentIndex + 1}/{Math.ceil(products.length / cardsToShow)}
-            </span>
-
-            <button
-              onClick={scrollRight}
-              disabled={currentIndex === products.length - cardsToShow}
-              className={`
-                max-md:w-9 max-md:h-9
-                group relative w-12 h-12
-                border-2 border-sky-950
-                flex items-center justify-center
-                transition-all duration-300 ease-in-out
-                ${
-                  currentIndex === products.length - cardsToShow
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-sky-950"
-                }
-              `}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className={`
-                  max-md:w-6 max-md:h-6
-                  w-8 h-8
-                  ${
-                    currentIndex === products.length - cardsToShow
-                      ? "text-gray-400"
-                      : "text-sky-950 group-hover:text-white"
-                  }
-                `}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-2 rounded-lg border-2 border-sky-950 px-4 py-2 font-montserrat text-sm font-semibold text-sky-950 transition-all hover:bg-sky-950 hover:text-white active:scale-95"
+        >
+          View all products
+          <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
+        </Link>
       </div>
+
+      {loading ? (
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+          {skeletons.map((item) => (
+            <div
+              key={item}
+              className="h-72 rounded-xl bg-slate-100 animate-pulse"
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+          {products.slice(0, MAX_HOME_PRODUCTS).map((product) => (
+            <PopularProductCard
+              key={product.id}
+              img_url={product.img_url}
+              name={product.name}
+              price={product.price}
+              product={product}
+              stock={product.stock}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };
