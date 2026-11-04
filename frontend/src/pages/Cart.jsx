@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner, faTrash, faMinus, faPlus, faUndo } from "@fortawesome/free-solid-svg-icons";
@@ -11,6 +11,7 @@ const Cart = () => {
   const [orderLoading, setOrderLoading] = useState(false);
   const [recentlyRemoved, setRecentlyRemoved] = useState(null);
   const navigate = useNavigate();
+  const isLoggedIn = Boolean(sessionStorage.getItem("id"));
 
   useEffect(() => {
     let timeout;
@@ -44,7 +45,10 @@ const Cart = () => {
   const confirmOrder = async () => {
     const userId = sessionStorage.getItem("id");
     if (!userId) {
-      setOrderError("You must be logged in to place an order.");
+      // Browsing and the cart stay open to everyone; ordering needs an account
+      navigate("/login", {
+        state: { from: "/cart", message: "Please log in to place your order." },
+      });
       return;
     }
 
@@ -199,19 +203,32 @@ const Cart = () => {
                   </div>
                 )}
 
+                {!isLoggedIn && (
+                  <div className="mt-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-900">
+                    You can browse the catalogue and fill your cart without an
+                    account. Log in when you are ready to place the order.
+                  </div>
+                )}
+
                 <div className="flex justify-end mt-8">
                   <button
                     onClick={confirmOrder}
                     disabled={orderLoading}
-                    className="w-full md:w-auto px-12 bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                    className={`w-full md:w-auto px-12 py-4 rounded-lg font-bold text-lg transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed ${
+                      isLoggedIn
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-sky-700 text-white hover:bg-sky-800"
+                    }`}
                   >
                     {orderLoading ? (
                       <>
                         <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
                         Placing Order...
                       </>
-                    ) : (
+                    ) : isLoggedIn ? (
                       "Confirm Order"
+                    ) : (
+                      "Log in to place order"
                     )}
                   </button>
                 </div>

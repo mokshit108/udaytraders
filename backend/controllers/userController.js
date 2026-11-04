@@ -216,15 +216,10 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // };
 
 const registerUser = async (req, res) => {
-  const { username, email, phoneNumber, password, specialCode } = req.body;
+  const { username, email, phoneNumber, password } = req.body;
   let role_id = 2; // customer
   if (email && email.toLowerCase() === "udaymoksh@gmail.com") {
     role_id = 1; // admin
-  }
-
-  const SPECIAL_CODE = process.env.SPECIAL_CODE || "UDAY04";
-  if (specialCode !== SPECIAL_CODE) {
-    return res.status(403).json({ error: "Invalid special code for registration." });
   }
 
   try {
@@ -366,13 +361,8 @@ const registerPhoneNumber = async (req, res) => {
 };
 
 const handleGoogleSignup = async (req, res) => {
-  const { token, specialCode, phoneNumber } = req.body;
+  const { token, phoneNumber } = req.body;
   let role_id = 2; // customer
-
-  const SPECIAL_CODE = process.env.SPECIAL_CODE || "UDAY04";
-  if (specialCode !== SPECIAL_CODE) {
-    return res.status(403).json({ error: "Invalid special code for registration." });
-  }
 
   if (!token) {
     return res.status(400).json({ error: 'Token is required' });

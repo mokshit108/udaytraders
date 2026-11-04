@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -8,7 +8,6 @@ import {
   faCheckCircle,
   faTimesCircle,
   faSpinner,
-  faCheck,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -27,11 +26,9 @@ const LoginCard = () => {
     email: "",
     phoneNumber: "",
     password: "",
-    specialCode: "",
   });
   const [googleSignupToken, setGoogleSignupToken] = useState(null);
-  const [showGoogleCodeInput, setShowGoogleCodeInput] = useState(false);
-  const [googleSpecialCode, setGoogleSpecialCode] = useState("");
+  const [showGooglePhoneInput, setShowGooglePhoneInput] = useState(false);
   const [googlePhoneNumber, setGooglePhoneNumber] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
@@ -40,6 +37,10 @@ const LoginCard = () => {
   const [loading, setLoading] = useState(false); // State for loading
 
   const navigate = useNavigate();
+  const location = useLocation();
+  // Send the user back where they came from (e.g. the cart, right before ordering)
+  const redirectTo = location.state?.from || "/";
+  const loginPrompt = location.state?.message || "";
 
   useEffect(() => {
     validateForm(); // Validate form on input change
@@ -91,16 +92,12 @@ const LoginCard = () => {
   };
 
   const handleGoogleSignup = (response) => {
-    // Store token and ask for special code instead of calling backend immediately
+    // Keep the Google token and ask for the phone number before creating the account
     setGoogleSignupToken(response.credential);
-    setShowGoogleCodeInput(true);
+    setShowGooglePhoneInput(true);
   };
 
-  const submitGoogleSignupWithCode = async () => {
-    if (!googleSpecialCode) {
-      setErrorMessage("Please enter the special code.");
-      return;
-    }
+  const submitGoogleSignup = async () => {
     if (!/^\d{10}$/.test(googlePhoneNumber)) {
       setErrorMessage("Phone number must be exactly 10 digits.");
       return;
@@ -112,7 +109,6 @@ const LoginCard = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token: googleSignupToken,
-          specialCode: googleSpecialCode,
           phoneNumber: googlePhoneNumber,
         }),
       });
@@ -134,7 +130,7 @@ const LoginCard = () => {
         setTimeout(() => navigate("/register-phone-number"), 3000);
       } else {
         setSuccessMessage("Google signup successful");
-        setTimeout(() => navigate("/"), 3000);
+        setTimeout(() => navigate(redirectTo, { replace: true }), 3000);
       }
     } catch (error) {
       setErrorMessage(error.message);
@@ -200,7 +196,7 @@ const LoginCard = () => {
         sessionStorage.setItem("roleid", result.user.role_id.toString());
         setTimeout(() => {
           setSuccessMessage("");
-          navigate("/"); // Redirect to home page
+          navigate(redirectTo, { replace: true }); // Back to the cart, or home
         }, 3000);
       } else {
         setSuccessMessage("User registered successfully");
@@ -215,7 +211,6 @@ const LoginCard = () => {
           email: "",
           phoneNumber: "",
           password: "",
-          specialCode: "",
         });
       }
 
@@ -276,7 +271,7 @@ const LoginCard = () => {
       sessionStorage.setItem("roleid", result.user.role_id.toString());
   
       setSuccessMessage("Google login successful");
-      setTimeout(() => navigate("/"), 3000); // Redirect to home page
+      setTimeout(() => navigate(redirectTo, { replace: true }), 3000);
   
     } catch (error) {
       setErrorMessage(error.message);
@@ -304,9 +299,11 @@ const LoginCard = () => {
           </div>
         ) : (
           <>
-            <div className="bg-sky-50 text-sky-800 p-3.5 rounded-lg mb-6 text-center text-sm font-semibold border border-sky-100 font-montserrat shadow-sm">
-              Note: Ask special code on this number <span className="font-bold underline text-sky-900">8104689015</span>
-            </div>
+            {loginPrompt && (
+              <div className="bg-sky-950 text-white p-3.5 rounded-lg mb-6 text-center text-sm font-semibold font-montserrat shadow-sm">
+                {loginPrompt}
+              </div>
+            )}
             {successMessage && (
               <div className="fixed bottom-5 right-5 z-50 flex items-center bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 max-w-md">
                 <FontAwesomeIcon icon={faCheckCircle} className="mr-3 text-2xl text-green-500" />
@@ -360,17 +357,6 @@ const LoginCard = () => {
                     onChange={handleChange}
                     placeholder="Enter Phone Number"
                     validationError={validationErrors.phoneNumber}
-                    renderValidationIcon={renderValidationIcon}
-                    required
-                  />
-                  <FormField
-                    label="Special Code"
-                    name="specialCode"
-                    type="text"
-                    value={signupFormData.specialCode}
-                    onChange={handleChange}
-                    placeholder="Enter Admin Special Code"
-                    validationError={validationErrors.specialCode}
                     renderValidationIcon={renderValidationIcon}
                     required
                   />
@@ -436,7 +422,7 @@ const LoginCard = () => {
 
               {!isLogin ? (
                 <div className="m-4">
-                  {!showGoogleCodeInput ? (
+                  {!showGooglePhoneInput ? (
                     <GoogleLogin
                       text="signup_with"
                       onSuccess={handleGoogleSignup}
@@ -453,16 +439,9 @@ const LoginCard = () => {
                         value={googlePhoneNumber}
                         onChange={(e) => setGooglePhoneNumber(e.target.value)}
                       />
-                      <input
-                        type="text"
-                        placeholder="Enter Special Code"
-                        className="w-full px-4 py-2 border rounded"
-                        value={googleSpecialCode}
-                        onChange={(e) => setGoogleSpecialCode(e.target.value)}
-                      />
                       <button
                         type="button"
-                        onClick={submitGoogleSignupWithCode}
+                        onClick={submitGoogleSignup}
                         className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mt-2"
                       >
                         Complete Google Signup
@@ -470,7 +449,7 @@ const LoginCard = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          setShowGoogleCodeInput(false);
+                          setShowGooglePhoneInput(false);
                           setGoogleSignupToken(null);
                         }}
                         className="w-full text-red-600 underline text-sm mt-2"
