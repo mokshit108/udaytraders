@@ -9,15 +9,35 @@ const { Readable } = require("stream");
 const transform = (url, width = 600) =>
   url && url.includes("/upload/") ? url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`) : url;
 
-const publicBrandFields = `id, name, slug, part, cover_url, sort_order`;
+// Not every brand has an artwork cover. Rather than leave the tile blank, fall
+// back to the first item inside that brand's catalogue (the way the printed
+// price list introduces a range), and only then to the first scanned page.
+// Expects the companies table aliased as "c".
+const resolvedCoverSql = (alias) => `COALESCE(
+         NULLIF(BTRIM(${alias}.cover_url), ''),
+         (SELECT p2.img_url
+            FROM products p2
+           WHERE p2.company_id = ${alias}.id
+             AND p2.source = 'catalogue'
+             AND NULLIF(BTRIM(p2.img_url), '') IS NOT NULL
+           ORDER BY p2.catalogue_page NULLS LAST, p2.id
+           LIMIT 1),
+         (SELECT cp.image_url
+            FROM catalogue_pages cp
+           WHERE cp.company_id = ${alias}.id
+           ORDER BY cp.page_no NULLS LAST, cp.id
+           LIMIT 1)
+       )`;
+
+const publicBrandFields = `id, name, slug, part, ${resolvedCoverSql("c")} AS cover_url, sort_order`;
 
 const getBrands = async (req, res) => {
   try {
     const { part } = req.query;
     const where = part ? `WHERE c.part = :part` : "";
     const result = await sequelize.query(
-      `SELECT c.id, c.name, c.slug, c.part, c.cover_url, c.sort_order,
-              COUNT(p.id)::int AS product_count
+      `SELECT c.id, c.name, c.slug, c.part, ${resolvedCoverSql("c")} AS cover_url,
+              c.sort_order, COUNT(p.id)::int AS product_count
          FROM companies c
          LEFT JOIN products p ON p.company_id = c.id AND p.source = 'catalogue'
          ${where}
@@ -37,7 +57,7 @@ const getBrand = async (req, res) => {
   try {
     const { slug } = req.params;
     const brandRes = await sequelize.query(
-      `SELECT ${publicBrandFields} FROM companies WHERE slug = :slug LIMIT 1`,
+      `SELECT ${publicBrandFields} FROM companies c WHERE c.slug = :slug LIMIT 1`,
       { replacements: { slug } }
     );
     if (brandRes[0].length === 0) return res.status(404).json({ error: "Brand not found" });

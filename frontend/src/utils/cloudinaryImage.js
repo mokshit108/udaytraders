@@ -1,6 +1,23 @@
 export const catalogueImg = (url, width = 600) =>
   url && url.includes("/upload/") ? url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`) : url;
 
+// A product carries either one image URL or a JSON array of them ("[\"a\",\"b\"]").
+export const parseImages = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== "string") return [];
+
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("[")) return [value];
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [value];
+  } catch {
+    return [value];
+  }
+};
+
 export const PLACEHOLDER_IMG =
   "data:image/svg+xml," +
   encodeURIComponent(

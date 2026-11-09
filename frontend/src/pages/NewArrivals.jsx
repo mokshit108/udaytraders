@@ -4,8 +4,8 @@ import "rc-slider/assets/index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faCheck, faFilter, faSort, faSortAmountDown, faSortAmountUp, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { useCart } from "../context/CartContext";
 import ImageModal from "../components/ImageModal";
+import ProductGridCard from "../components/ProductGridCard";
 
 const NewArrivals = () => {
 
@@ -24,7 +24,6 @@ const NewArrivals = () => {
   const [sortOrder, setSortOrder] = useState("none");
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(30);
-  const { addToCart } = useCart();
   const [modalImages, setModalImages] = useState([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
@@ -538,65 +537,17 @@ const NewArrivals = () => {
               </div>
             ) : visibleProducts.length > 0 ? (
               <Fragment>
-                {visibleProducts.map((product, index) => {
-                  return (
-                    <div key={index} className="border border-gray-200 flex flex-col bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden group">
-                      {/* Product image */}
-                      <div
-                        className="w-full aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer"
-                        onClick={() => handleImageClick(product.img_url)}
-                        title="Click to view all images"
-                      >
-                        {/* If multiple images, show badge */}
-                        {typeof product.img_url === 'string' && product.img_url.startsWith('[') && (
-                          <div className="absolute top-2 right-2 z-10 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full pointer-events-none">
-                            {(() => {
-                              try { return JSON.parse(product.img_url).length > 1 ? `${JSON.parse(product.img_url).length} Images` : ''; }
-                              catch (e) { return ''; }
-                            })()}
-                          </div>
-                        )}
-                        <img
-                          src={(typeof product.img_url === 'string' && product.img_url.startsWith('['))
-                            ? (JSON.parse(product.img_url)[0] || '')
-                            : product.img_url}
-                          alt={product.name}
-                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-
-                      {/* Product details */}
-                      <div className="p-3 sm:p-4 flex flex-col flex-grow bg-white">
-                        <h5 className="text-sm md:text-base font-semibold line-clamp-2 min-h-[2.5em] text-slate-800">
-                          {product.name}
-                        </h5>
-                        <div className="flex justify-between items-center mt-2">
-                          <p className="text-slate-500 text-sm font-medium line-clamp-1">
-                            {companies.find((c) => c.id === product.company_id)?.name || ""}
-                            {product.code ? ` · ${product.code}` : ""}
-                          </p>
-                          <p className="text-sky-900 font-bold text-sm md:text-base whitespace-nowrap ml-2">
-                            ₹{product.price}
-                          </p>
-                        </div>
-                        <div className="mt-auto pt-3">
-                          {!product.stock ? (
-                            <p className="text-red-500 font-semibold text-sm text-center py-2">
-                              Restocking soon
-                            </p>
-                          ) : (
-                            <button
-                              onClick={() => addToCart(product)}
-                              className="w-full bg-sky-700 text-white py-2 sm:py-2.5 rounded-lg text-sm font-semibold hover:bg-sky-800 active:scale-95 transition-all shadow-sm"
-                            >
-                              Add to Cart
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {visibleProducts.map((product) => (
+                  <ProductGridCard
+                    key={product.id}
+                    product={product}
+                    companyName={
+                      companies.find((c) => c.id === product.company_id)?.name || ""
+                    }
+                    onImageClick={handleImageClick}
+                    enforceStock
+                  />
+                ))}
                 {hasMore && (
                   <div className="col-span-2 md:col-span-3 flex justify-center mt-6">
                     <button

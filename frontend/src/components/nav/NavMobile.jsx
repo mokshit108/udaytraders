@@ -2,7 +2,6 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
-  faShoppingCart,
   faSignOutAlt,
   faBars,
   faTimes,
@@ -11,7 +10,7 @@ import {
 
 import { navLinks } from "../../constants";
 import { Link } from "react-router-dom"; // Import Link
-import { useCart } from "../../context/CartContext";
+import CartButton from "../CartButton";
 
 const NavMobile = ({
   username,
@@ -20,8 +19,6 @@ const NavMobile = ({
   menuOpen,
   toggleMenu,
 }) => {
-  const { cart } = useCart();
-
   return (
     <>
       <header className="fixed py-4 top-0 left-0 w-full bg-sky-950  text-white font-semibold z-50 md:hidden">
@@ -34,6 +31,9 @@ const NavMobile = ({
             />
           </button>
           <div className="relative flex items-center space-x-4 shrink-0">
+            {/* Guests can fill a cart — an account is only needed to place the order.
+                The icon opens a mini cart directly below it. */}
+            <CartButton iconClassName="text-lg md:text-xl" />
             {username ? (
               <div className="flex items-center gap-4">
                 <p className="font-palanquin leading-3 mr-3">
@@ -52,17 +52,6 @@ const NavMobile = ({
                   <span className="ml-4 hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-8 transform -translate-x-1/2 whitespace-nowrap">
                     Logout
                   </span>
-                </Link>
-                <Link to="/cart" className="flex items-end group relative">
-                  <FontAwesomeIcon
-                    icon={faShoppingCart}
-                    className="text-lg md:text-xl hover:text-cyan-600 cursor-pointer"
-                  />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-blue-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full">
-                      {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                    </span>
-                  )}
                 </Link>
                 <Link to="/profile" className="flex items-end group">
                   <FontAwesomeIcon

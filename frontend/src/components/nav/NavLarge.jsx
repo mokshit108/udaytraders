@@ -2,17 +2,15 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
-  faShoppingCart,
   faSignOutAlt,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { navLinks } from "../../constants";
 
 import { Link } from "react-router-dom"; // Import Link
-import { useCart } from "../../context/CartContext";
+import CartButton from "../CartButton";
 
 const NavLarge = ({ location, username, logout }) => {
-  const { cart } = useCart();
 
   return (
     <ul className="hidden md:flex items-center justify-between w-full px-6 lg:px-12 py-4">
@@ -47,7 +45,10 @@ const NavLarge = ({ location, username, logout }) => {
 
       {/* Sign In, Logout, and Cart (Desktop View) */}
       <li className="flex items-center gap-4 relative">
-        <div className="relative">
+        <div className="relative flex items-center gap-4">
+          {/* Guests can fill a cart — an account is only needed to place the order.
+              The icon opens a mini cart directly below it. */}
+          <CartButton iconClassName="text-lg xl:text-xl" />
           {username ? (
             <div className="flex items-center gap-4">
               <p className="flex items-end group font-palanquin text-lg xl:text-xl leading-3">
@@ -60,20 +61,6 @@ const NavLarge = ({ location, username, logout }) => {
                 />
                 <span className="ml-4 hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-8 transform -translate-x-1/2 whitespace-nowrap">
                   Logout
-                </span>
-              </Link>
-              <Link to="/cart" className="flex items-end group relative">
-                <FontAwesomeIcon
-                  icon={faShoppingCart}
-                  className="text-lg xl:text-xl hover:text-cyan-600 hover:underline cursor-pointer"
-                />
-                {cart.length > 0 && (
-                  <span className="absolute -top-2 -right-3 bg-blue-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full">
-                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                  </span>
-                )}
-                <span className="ml-4 hidden group-hover:block bg-sky-700 text-white text-xs px-3 py-1 rounded absolute -top-8 transform -translate-x-1/2 whitespace-nowrap">
-                  Cart
                 </span>
               </Link>
               <Link to="/profile" className="flex items-end group">
