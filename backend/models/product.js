@@ -46,6 +46,21 @@ module.exports = (sequelize, DataTypes) => {
       series: {
         type: DataTypes.STRING,
       },
+      code: {
+        type: DataTypes.STRING(100),
+      },
+      section: {
+        type: DataTypes.STRING(255),
+      },
+      variant_label: {
+        type: DataTypes.STRING(255),
+      },
+      catalogue_page: {
+        type: DataTypes.INTEGER,
+      },
+      source: {
+        type: DataTypes.STRING(50),
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

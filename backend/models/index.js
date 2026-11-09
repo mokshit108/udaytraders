@@ -27,6 +27,7 @@ const OrderStatus = require('./orderStatus')(sequelize, Sequelize.DataTypes);
 
 const Role = require('./role')(sequelize, Sequelize.DataTypes); // New Role model
 const Footer = require('./footer')(sequelize, Sequelize.DataTypes); // New Role model
+const CataloguePage = require('./cataloguePage')(sequelize, Sequelize.DataTypes);
 
 // Define relationships if needed
 // User & Role Relationship
@@ -51,6 +52,9 @@ Address.hasMany(Order, { foreignKey: 'address_id' });
 OrderStatus.hasMany(Order, { foreignKey: 'status_id' });
 Order.belongsTo(OrderStatus, { foreignKey: 'status_id' });
 
+CataloguePage.belongsTo(Company, { foreignKey: 'company_id', onDelete: 'CASCADE' });
+Company.hasMany(CataloguePage, { foreignKey: 'company_id', onDelete: 'CASCADE' });
+
 
 
 module.exports = {
@@ -67,4 +71,5 @@ module.exports = {
   Role,
   Company,
   Footer,
+  CataloguePage,
 };

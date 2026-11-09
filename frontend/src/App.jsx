@@ -7,7 +7,7 @@ import {
   PopularProducts,
 } from "./sections";
 import { CartProvider } from "./context/CartContext";
-import { NewArrivals, Cart, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber } from "./pages";
+import { NewArrivals, Cart, ContactUs, LoginCard, Product, ForgotPassword, ResetPassword , Profile, OrderTimeline, NotFound, RegisterPhoneNumber, Catalogue, Brand, BrandTiles } from "./pages";
 import SuccessPage from "./components/SuccessPage";
 const App = () => {
   
@@ -24,6 +24,8 @@ const App = () => {
             <Route path="/contact-us" element={<ContactUs />} />
 
             <Route path="/products" element={<NewArrivals />} />
+            <Route path="/catalogue" element={<Catalogue />} />
+            <Route path="/brand/:slug" element={<Brand />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<LoginCard />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -63,6 +65,7 @@ const Home = () => (
     </section>
 
     <PopularProducts />
+    <BrandTiles />
   </>
 );
 

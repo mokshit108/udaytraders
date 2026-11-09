@@ -10,6 +10,8 @@ import Profile from "./user/Profile"
 import OrderTimeline from "./user/OrderTimeline";
 import NotFound from "./NotFound";
 import  RegisterPhoneNumber from "./RegisterPhoneNumber";
+import Catalogue, { BrandTiles } from "./Catalogue";
+import Brand from "./Brand";
 
 export {
     NewArrivals,
@@ -23,5 +25,8 @@ export {
     Profile,
     OrderTimeline,
     NotFound,
-    RegisterPhoneNumber
+    RegisterPhoneNumber,
+    Catalogue,
+    Brand,
+    BrandTiles
 }

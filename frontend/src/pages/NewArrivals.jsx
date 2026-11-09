@@ -1,8 +1,8 @@
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimes, faCheck, faFilter, faSort, faSortAmountDown, faSortAmountUp } from "@fortawesome/free-solid-svg-icons";
+import { faTimes, faCheck, faFilter, faSort, faSortAmountDown, faSortAmountUp, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useCart } from "../context/CartContext";
 import ImageModal from "../components/ImageModal";
@@ -10,7 +10,9 @@ import ImageModal from "../components/ImageModal";
 const NewArrivals = () => {
 
   const [priceRange, setPriceRange] = useState([0, 10000]);
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedCompanyA, setSelectedCompanyA] = useState("");
+  const [selectedCompanyB, setSelectedCompanyB] = useState("");
+  const selectedCompany = selectedCompanyA || selectedCompanyB || "";
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -20,6 +22,7 @@ const NewArrivals = () => {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState("none");
+  const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(30);
   const { addToCart } = useCart();
   const [modalImages, setModalImages] = useState([]);
@@ -57,14 +60,7 @@ const NewArrivals = () => {
 
         // Check if data is in the expected format
         if (Array.isArray(data.products)) {
-          // Newest first, so "New Arrivals" leads with the latest products
-          const newestFirst = [...data.products].sort((a, b) => {
-            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-            if (bTime !== aTime) return bTime - aTime;
-            return (b.id ?? 0) - (a.id ?? 0);
-          });
-          setProducts(newestFirst);
+          setProducts(data.products);
         } else {
           console.error("Products data is not an array:", data.products);
           setErrorMessage("Error: Products data is invalid.");
@@ -98,6 +94,32 @@ const NewArrivals = () => {
     fetchProductsAndCategories();
   }, []);
 
+  // Default order: brand by brand — Seiko first, then Part A, Part B; legacy brands (no part) last
+  const orderedProducts = useMemo(() => {
+    const rank = {};
+    companies
+      .slice()
+      .sort((x, y) => {
+        const gx = x.part ? (x.part === "A" ? 1 : 2) : 3;
+        const gy = y.part ? (y.part === "A" ? 1 : 2) : 3;
+        if (gx !== gy) return gx - gy;
+        return (x.sort_order ?? x.id) - (y.sort_order ?? y.id);
+      })
+      .forEach((c, i) => {
+        rank[c.id] = (c.name || "").trim().toLowerCase() === "seiko" ? -1 : i;
+      });
+
+    return [...products].sort((a, b) => {
+      const ra = rank[a.company_id] ?? Number.MAX_SAFE_INTEGER;
+      const rb = rank[b.company_id] ?? Number.MAX_SAFE_INTEGER;
+      if (ra !== rb) return ra - rb;
+      const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (bTime !== aTime) return bTime - aTime;
+      return (b.id ?? 0) - (a.id ?? 0);
+    });
+  }, [products, companies]);
+
   const handleSortChange = (order) => {
     setSortOrder(order);
   };
@@ -106,8 +128,14 @@ const NewArrivals = () => {
     setPriceRange(value);
   };
 
-  const handleCompanyChange = (companyId) => {
-    setSelectedCompany(companyId);
+  const handleCompanyAChange = (companyId) => {
+    setSelectedCompanyA(companyId);
+    if (companyId) setSelectedCompanyB("");
+  };
+
+  const handleCompanyBChange = (companyId) => {
+    setSelectedCompanyB(companyId);
+    if (companyId) setSelectedCompanyA("");
   };
 
   const handleCategoryChange = (categoryId) => {
@@ -124,7 +152,8 @@ const NewArrivals = () => {
   };
 
   const clearCompanyFilters = () => {
-    setSelectedCompany("");
+    setSelectedCompanyA("");
+    setSelectedCompanyB("");
   };
 
   const clearCategoryFilters = () => {
@@ -132,7 +161,9 @@ const NewArrivals = () => {
   };
 
   const clearAllFilters = () => {
-    setSelectedCompany("");
+    setSearchQuery("");
+    setSelectedCompanyA("");
+    setSelectedCompanyB("");
     setSelectedCategory([]);
     setInStockOnly(false);
     setPriceRange([0, 10000]);
@@ -149,8 +180,14 @@ const NewArrivals = () => {
   };
 
   // Filter products based on criteria
-  const filteredProducts = products.filter((item) => {
+  const filteredProducts = orderedProducts.filter((item) => {
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      (item.name || "").toLowerCase().includes(q) ||
+      (item.code || "").toLowerCase().includes(q);
     return (
+      matchesSearch &&
       item.price >= priceRange[0] &&
       item.price <= priceRange[1] &&
       (selectedCompany === "" || item.company_id === parseInt(selectedCompany)) &&
@@ -179,7 +216,7 @@ const NewArrivals = () => {
 
   useEffect(() => {
     setVisibleCount(30);
-  }, [priceRange, selectedCompany, selectedCategory, inStockOnly, sortOrder]);
+  }, [searchQuery, priceRange, selectedCompanyA, selectedCompanyB, selectedCategory, inStockOnly, sortOrder]);
 
   const sliderStyle = {
     width: "100%",
@@ -371,41 +408,77 @@ const NewArrivals = () => {
                 </div>
               </div>
 
-              {/* Shop by Company */}
+              {/* Search */}
               <div className="mb-8">
-                <h4 className="text-lg font-semibold">Shop by Company</h4>
+                <h4 className="text-lg font-semibold">Search</h4>
                 <div className="border-t border-gray-300 my-3"></div>
-                <div className="flex flex-wrap mt-2">
-                  {companies.map((company, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center mb-2 mr-4 font-medium"
+                <div className="relative">
+                  <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name or code..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-sky-700"
+                  />
+                </div>
+              </div>
+
+              {/* Part A — Brands dropdown */}
+              <div className="mb-8">
+                <select
+                  value={selectedCompanyA}
+                  onChange={(e) => handleCompanyAChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm md:text-base font-montserrat bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-700"
+                >
+                  <option value="">All Brands</option>
+                  {companies
+                    .filter((company) => company.part === "A")
+                    .map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                </select>
+                {selectedCompanyA && (
+                  <div className="flex items-center mt-2">
+                    <button
+                      className="text-gray-700 text-sm"
+                      onClick={() => setSelectedCompanyA("")}
                     >
-                      <input
-                        type="radio"
-                        id={`company-${index}`}
-                        name="company"
-                        value={company.id}
-                        checked={selectedCompany === company.id}
-                        onChange={() => handleCompanyChange(company.id)}
-                        className="mr-2 h-5 w-5 appearance-none rounded border-2 border-gray-300 checked:bg-sky-950 checked:border-transparent relative"
-                      />
-                      <label htmlFor={`company-${index}`} className="text-sm md:text-base">{company.name}</label>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center mt-1">
-                  <button
-                    className="text-gray-700 mr-2 text-sm"
-                    onClick={clearCompanyFilters}
-                  >
-                    <FontAwesomeIcon
-                      icon={faTimes}
-                      className="h-4 w-4 inline-block mr-1"
-                    />
-                    Clear
-                  </button>
-                </div>
+                      <FontAwesomeIcon icon={faTimes} className="h-4 w-4 inline-block mr-1" />
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Part B — Allied Products dropdown */}
+              <div className="mb-8">
+                <select
+                  value={selectedCompanyB}
+                  onChange={(e) => handleCompanyBChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm md:text-base font-montserrat bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-700"
+                >
+                  <option value="">All Allied Products</option>
+                  {companies
+                    .filter((company) => company.part === "B")
+                    .map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                </select>
+                {selectedCompanyB && (
+                  <div className="flex items-center mt-2">
+                    <button
+                      className="text-gray-700 text-sm"
+                      onClick={() => setSelectedCompanyB("")}
+                    >
+                      <FontAwesomeIcon icon={faTimes} className="h-4 w-4 inline-block mr-1" />
+                      Clear
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* In Stock Only */}
@@ -421,7 +494,9 @@ const NewArrivals = () => {
               </div>
 
               {/* Clear All Filters Button */}
-              {(selectedCompany !== "" ||
+              {(searchQuery.trim() !== "" ||
+                selectedCompanyA !== "" ||
+                selectedCompanyB !== "" ||
                 selectedCategory.length > 0 ||
                 inStockOnly ||
                 sortOrder !== "none" ||
@@ -496,8 +571,11 @@ const NewArrivals = () => {
                           {product.name}
                         </h5>
                         <div className="flex justify-between items-center mt-2">
-                          <p className="text-slate-500 text-sm font-medium">{product.company}</p>
-                          <p className="text-sky-900 font-bold text-sm md:text-base">
+                          <p className="text-slate-500 text-sm font-medium line-clamp-1">
+                            {companies.find((c) => c.id === product.company_id)?.name || ""}
+                            {product.code ? ` · ${product.code}` : ""}
+                          </p>
+                          <p className="text-sky-900 font-bold text-sm md:text-base whitespace-nowrap ml-2">
                             ₹{product.price}
                           </p>
                         </div>

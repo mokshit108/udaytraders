@@ -12,6 +12,20 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         unique: true,
       },
+      slug: {
+        type: DataTypes.STRING,
+        unique: true,
+      },
+      part: {
+        type: DataTypes.CHAR(1),
+      },
+      cover_url: {
+        type: DataTypes.TEXT,
+      },
+      sort_order: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
     },
     {
       tableName: "companies",
@@ -21,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Company.associate = (models) => {
     Company.hasMany(models.Product, { foreignKey: "company_id", onDelete: "CASCADE" });
+    Company.hasMany(models.CataloguePage, { foreignKey: "company_id", onDelete: "CASCADE" });
   };
 
   return Company;

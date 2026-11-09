@@ -16,6 +16,7 @@ const excelimport  = require("./routes/import");
 const authenticateToken = require("./middlewares/authMiddleware");
 const userRoutes = require("./routes/users");
 const uploadRoutes = require("./routes/upload");
+const brandRoutes = require("./routes/brandRoutes");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -80,6 +81,7 @@ app.use("/otp", otpRoutes);
 app.use("/profile", profile);
 app.use("/import", excelimport);
 app.use("/upload", uploadRoutes);
+app.use("/brands", brandRoutes);
 app.get('/api/check-session', (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Session expired" });
